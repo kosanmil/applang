@@ -62,6 +62,25 @@ def STRING():           return _(r"""("(?:\\.|[^\\"])*")|('(?:\\.|[^\\'])*')""")
 def comment():          return [_("//.*"), _("/\*.*\*/")]
 
 
+# Helper classes
+class EntityCrossRef(object):
+    """
+    Used for entity reference resolving when referenced by attributes in entites.
+
+    Attributes:
+        entity_name(str): Name of the target entity.
+        attr_name(str): Name of the attribute used for cross-referencing.
+        attr_entity_name(str): Name of the entity that contains the attribute used for cross-referencing
+        position(int): The position in the input string of this cross-ref.
+    """
+    def __init__(self, entity_name, attr_name, attr_entity_name, position=0):
+        self.entity_name = entity_name
+        self.attr_name = attr_name
+        self.attr_entity_name = attr_entity_name
+        self.position = position
+
+
+
 # Semantic actions
 
 class Entity(SemanticAction):
@@ -89,6 +108,14 @@ class Entity(SemanticAction):
         entity_model = {}
         entity_model['name'] = entity_name
         entity_model['attributes'] = attributes
+        #Creating EntityCrossRefs for non-primitive attributes
+        for attr in attributes:
+            if not IsPrimitiveType(attr['type']):
+                if not hasattr(parser, "entity_cross_refs"):
+                    parser.entity_cross_refs = []
+                parser.entity_cross_refs.append(
+                    EntityCrossRef(attr['type'], attr['name'], entity_name, parser.pos_to_linecol(node.position)))
+
         #Getting the label
         labels = [x[1] for x in children if x[0] == 'entity_label']
         if len(labels) > 0:
@@ -98,9 +125,24 @@ class Entity(SemanticAction):
             raise Exception("There are more than one labels in the entity {}".format(entity_name))
 
         parser.entities.append(entity_model)
+        return entity_model
 
 
     def second_pass(self, parser, node):
+        entity_model = node
+        for attr in entity_model['attributes']:
+            attr_type = attr['type']
+            if not IsPrimitiveType(attr_type):
+                cross_refs = [x for x in parser.entity_cross_refs
+                                     if x.attr_name == attr['name']
+                                        and x.attr_entity_name == entity_model['name']
+                                        and x.entity_name == attr_type]
+                for cross_ref in cross_refs:
+                    if cross_ref.entity_name not in [x['name'] for x in parser.entities]:
+                        raise SemanticError("The type of attribute '{}' type must be primitive or reference an existing entity "
+                                            "at {}"
+                                            .format(attr['name'], cross_ref.position))
+
         return
 
 entity.sem = Entity()
@@ -152,12 +194,6 @@ class Attribute(SemanticAction):
         return attr_model
 
     def second_pass(self, parser, node):
-        attr_model = node
-        attr_type = attr_model['type']
-        if not IsPrimitiveType(attr_type):
-            if attr_type not in [x['name'] for x in parser.entities]:
-                raise SemanticError("The type of attribute '{}' type must be primitive or reference an existing entity"
-                                    .format(attr_model['name']))
 
         return
 
