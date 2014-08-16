@@ -9,40 +9,57 @@ from arpeggio import *
 from arpeggio.export import PMDOTExporter, PTDOTExporter
 from arpeggio import RegExMatch as _
 
+import pprint
+
 def model():            return ZeroOrMore(entity), EOF
-def entity():           return Kwd("entity"), FirstUpperID, Optional("(", STRING, ")"), attr_block
+def entity():           return ENTITY_KWD, FirstUpperID, Optional(entity_label), attr_block
+def entity_label():     return "(", STRING, ")"
 def attr_block():       return "{", ZeroOrMore(attribute), "}"
-def attribute():        return Optional(MANY), ID, ":", attr_type, Optional(descr_block), ";"
-def attr_type():        return ID
+def attribute():        return Optional(MANY_KWD), ID, ":", attr_type, Optional(descr_block), ";"
+def attr_type():        return [PRIM_TYPES_KEYWORDS, FirstUpperID()]
 
 
 def descr_block():      return "(", descr, ZeroOrMore(",", descr), ")"
 def descr():            return [required, unique, transient, toString, excludeFromList, label]
-def required():         return Kwd("required")
-def unique():           return Kwd("unique")
-def transient():        return Kwd("transient")
-def toString():         return Kwd("toString")
-def excludeFromList():  return Kwd("excludeFromList")
-def label():            return Kwd("label"), "=", STRING
+def required():         return REQUIRED_KWD
+def unique():           return UNIQUE_KWD
+def transient():        return TRANSIENT_KWD
+def toString():         return TO_STRING_KWD
+def excludeFromList():  return EXCLUDE_FROM_LIST_KWD
+def label():            return LABEL_KWD, "=", STRING
 
 
-def MANY():             return Kwd("many")
+#Attribute Descriptions Keywords
+def ENTITY_KWD():           return "entity"
+def MANY_KWD():             return "many"
+def REQUIRED_KWD():         return "required"
+def UNIQUE_KWD():           return "unique"
+def TRANSIENT_KWD():        return "transient"
+def TO_STRING_KWD():        return "toString"
+def EXCLUDE_FROM_LIST_KWD():return "excludeFromList"
+def LABEL_KWD():            return "label"
 
+DESCR_KEYWORDS = [ENTITY_KWD(), MANY_KWD(), REQUIRED_KWD(), UNIQUE_KWD(),
+            TRANSIENT_KWD(), TO_STRING_KWD(), EXCLUDE_FROM_LIST_KWD(), LABEL_KWD()]
 
+#Primitive types
+def INTEGER_KWD():          return "int"
+def STRING_KWD():           return "string"
+def FLOAT_KWD():            return "float"
+def BOOL_KWD():             return "bool"
+def DATE_KWD():             return "date"
+
+PRIM_TYPES_KEYWORDS = [INTEGER_KWD(), STRING_KWD(), FLOAT_KWD(), BOOL_KWD(), DATE_KWD()]
+
+KEYWORDS = DESCR_KEYWORDS + PRIM_TYPES_KEYWORDS
+
+#Regex
 def ID():               return _(r'([a-z]|[A-Z]|_)([a-z]|[A-Z]|_|[0-9])*')
 def FirstUpperID():     return _(r'([A-Z])([a-z]|[A-Z]|_|[0-9])*')
-def STRING():           return _(r"""("(?:\\.|[^"\\])*")|('(?:\\.|[^'\\])*')""")
+def STRING():           return _(r"""("(?:\\.|[^\\"])*")|('(?:\\.|[^\\'])*')""")
 
 
 def comment():          return [_("//.*"), _("/\*.*\*/")]
-
-
-# def number():     return _(r'\d*\.\d*|\d+')
-# def factor():     return Optional(["+","-"]), [number,
-#                           ("(", expression, ")")]
-# def term():       return factor, ZeroOrMore(["*","/"], factor)
-# def expression(): return term, ZeroOrMore(["+", "-"], term)
-# def calc():       return OneOrMore(expression), EOF
 
 
 # Semantic actions
@@ -54,21 +71,49 @@ class Entity(SemanticAction):
     """
     def first_pass(self, parser, node, children):
         #Check for duplicate entity names
-        if not hasattr(parser, "entity_names"):
-            parser.entity_names = []
         entity_name = children[0]
-        if entity_name in parser.entity_names:
-            raise SemanticError("Entity '{}' already exists!".format(entity_name))
-        parser.entity_names.append(entity_name)
-
+        if IsKeyword(entity_name):
+            raise SemanticError("Entity name cannot be a keyword '{}' at {}"
+                                .format(entity_name,parser.pos_to_linecol(node[1].position)))
+        if not hasattr(parser, "entities"):
+            parser.entities = []
+        if entity_name in [x['name'] for x in parser.entities]:
+            raise SemanticError("Entity '{}' already exists at {}!"
+                                .format(entity_name, parser.pos_to_linecol(node[1].position)))
         #Check for duplicate attribute names in the same entity
-        attribute_names = children[-1]
+        attributes = children[-1]
+        attribute_names = [x['name'] for x in attributes]
         if len(attribute_names) != len(set(attribute_names)):
-            raise SemanticError("There are duplicate attribute names in the entity '{}'!".format(entity_name))
+            raise SemanticError("There are duplicate attribute names in the entity '{}' at {}!"
+                                .format(entity_name, parser.pos_to_linecol(node[1].position)))
+        entity_model = {}
+        entity_model['name'] = entity_name
+        entity_model['attributes'] = attributes
+        #Getting the label
+        labels = [x[1] for x in children if x[0] == 'entity_label']
+        if len(labels) > 0:
+            entity_model['label'] = labels[0]
+        if len(labels) > 1:
+            #This should never happen!
+            raise Exception("There are more than one labels in the entity {}".format(entity_name))
+
+        parser.entities.append(entity_model)
 
 
     def second_pass(self, parser, node):
         return
+
+entity.sem = Entity()
+
+
+class EntityLabel(SemanticAction):
+    """
+    Semantic action for entity label. Returns the tuple "entity_label" and the lable as a string.
+    """
+    def first_pass(self, parser, node, children):
+        return 'entity_label', children[0]
+
+entity_label.sem = EntityLabel()
 
 
 class AttributeBlock(SemanticAction):
@@ -78,16 +123,45 @@ class AttributeBlock(SemanticAction):
     def first_pass(self, parser, node, children):
         return children
 
+attr_block.sem = AttributeBlock()
+
 
 class Attribute(SemanticAction):
     """
-    Semantic actions for attribute. It returns the attribute name on the first pass
+    Semantic actions for attribute. It returns the attribute model with the name, type
+    and description dictionary
     """
     def first_pass(self, parser, node, children):
-        if children[0] == MANY():
-            return children[1]
+        attr_many = children[0] == MANY_KWD()
+        if attr_many:
+            attr_name = children[1]
+            attr_type = children[2]
         else:
-            return children[0]
+            attr_name = children[0]
+            attr_type = children[1]
+        if IsKeyword(attr_name):
+            raise SemanticError("Attribute name cannot be a keyword '{}' at {}"
+                                .format(attr_name, parser.pos_to_linecol(node[1].position)))
+        attr_model = {}
+        attr_model['many'] = attr_many
+        attr_model['name'] = attr_name
+        attr_model['type'] = attr_type
+        #Checking if the attribute has descriptions
+        if type(children[-1]) is tuple and children[-1][0] == 'DescrBlock':
+            attr_model['descr_block'] = children[-1][1]
+        return attr_model
+
+    def second_pass(self, parser, node):
+        attr_model = node
+        attr_type = attr_model['type']
+        if not IsPrimitiveType(attr_type):
+            if attr_type not in [x['name'] for x in parser.entities]:
+                raise SemanticError("The type of attribute '{}' type must be primitive or reference an existing entity"
+                                    .format(attr_model['name']))
+
+        return
+
+attribute.sem = Attribute()
 
 
 class DescrBlock(SemanticAction):
@@ -98,8 +172,11 @@ class DescrBlock(SemanticAction):
     def first_pass(self, parser, node, children):
         retval = dict(children)
         if len(retval) != len(children):
-            raise SemanticError("There are duplicate descriptions in the attribute!")
-        return retval
+            raise SemanticError("There are duplicate descriptions in the attribute at {}!"
+                                .format(parser.pos_to_linecol(node[0].position)))
+        return 'DescrBlock', retval
+
+descr_block.sem = DescrBlock()
 
 
 class Required(SemanticAction):
@@ -107,11 +184,15 @@ class Required(SemanticAction):
     def first_pass(self, parser, node, children):
         return 'required', True
 
+required.sem = Required()
+
 
 class Unique(SemanticAction):
 
     def first_pass(self, parser, node, children):
         return 'unique', True
+
+unique.sem = Unique()
 
 
 class Transient(SemanticAction):
@@ -119,11 +200,15 @@ class Transient(SemanticAction):
     def first_pass(self, parser, node, children):
         return 'transient', True
 
+transient.sem = Transient()
+
 
 class ToString(SemanticAction):
 
     def first_pass(self, parser, node, children):
         return 'toString', True
+
+toString.sem = ToString()
 
 
 class ExcludeFromList(SemanticAction):
@@ -131,23 +216,22 @@ class ExcludeFromList(SemanticAction):
     def first_pass(self, parser, node, children):
         return 'excludeFromList', True
 
+excludeFromList.sem = ExcludeFromList()
+
 
 class Label(SemanticAction):
 
     def first_pass(self, parser, node, children):
         return 'label', children[0]
 
-
-entity.sem = Entity()
-attr_block.sem = AttributeBlock()
-attribute.sem = Attribute()
-descr_block.sem = DescrBlock()
-required.sem = Required()
-unique.sem = Unique()
-transient.sem = Transient()
-toString.sem = ToString()
-excludeFromList.sem = ExcludeFromList()
 label.sem = Label()
+
+
+def IsKeyword(inputText):
+    return inputText in KEYWORDS
+
+def IsPrimitiveType(inputType):
+    return inputType in PRIM_TYPES_KEYWORDS
 
 
 if __name__ == "__main__":
@@ -155,15 +239,15 @@ if __name__ == "__main__":
     input = """
     entity FirstEntity {
         //First entity
-        name : String(required, unique, excludeFromList);
-        age : Integer(label='Age of the entity');
+        name : string(required, unique, excludeFromList);
+        age : int(label='Age of "the" entity', toString);
 
     }
 
     entity SecondEntity ("Second Entity") {
         //Second entity
-        many dfd : String;
-        attr2 : Integer(toString, label="Attribute number 'two' .");
+        many attribute1 : FirstEntity;
+        attr2 : date(toString, label="Attribute quotes number 'two' .");
 
     }
 
@@ -185,3 +269,7 @@ if __name__ == "__main__":
     # returned value will be the result of the input_expr expression.
     # print("{} = {}".format(input, parser.getASG()))
     pyParser.getASG()
+
+    #Pretty printing the model
+    pp = pprint.PrettyPrinter(indent=4)
+    pp.pprint(pyParser.entities)
