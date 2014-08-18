@@ -1,5 +1,5 @@
 #######################################################################
-# Name: applang.py
+# Name: applang_parser.py
 # Purpose: Textual DSL for generating mobile applications
 # Author: Milan Kosanovic <kosanmil AT gmail DOT com>
 #
@@ -8,8 +8,10 @@
 from arpeggio import *
 from arpeggio.export import PMDOTExporter, PTDOTExporter
 from arpeggio import RegExMatch as _
+from jinja2 import Environment, FileSystemLoader
 
-import pprint
+
+from applang_model import *
 
 def model():            return ZeroOrMore(entity), EOF
 def entity():           return ENTITY_KWD, FirstUpperID, Optional(entity_label), attr_block
@@ -83,7 +85,7 @@ class EntityCrossRef(object):
 
 # Semantic actions
 
-class Entity(SemanticAction):
+class EntitySem(SemanticAction):
     """
     Semantic actions for entity. It checks if there are multiple entities with the same name, or
     if there are multiple attributes with the same name inside a single entity.
@@ -96,33 +98,34 @@ class Entity(SemanticAction):
                                 .format(entity_name,parser.pos_to_linecol(node[1].position)))
         if not hasattr(parser, "entities"):
             parser.entities = []
-        if entity_name in [x['name'] for x in parser.entities]:
+        if entity_name in [x.name for x in parser.entities]:
             raise SemanticError("Entity '{}' already exists at {}!"
                                 .format(entity_name, parser.pos_to_linecol(node[1].position)))
         #Check for duplicate attribute names in the same entity
         attributes = children[-1]
-        attribute_names = [x['name'] for x in attributes]
+        attribute_names = [x.name for x in attributes]
         if len(attribute_names) != len(set(attribute_names)):
             raise SemanticError("There are duplicate attribute names in the entity '{}' at {}!"
                                 .format(entity_name, parser.pos_to_linecol(node[1].position)))
-        entity_model = {}
-        entity_model['name'] = entity_name
-        entity_model['attributes'] = attributes
-        #Creating EntityCrossRefs for non-primitive attributes
-        for attr in attributes:
-            if not IsPrimitiveType(attr['type']):
-                if not hasattr(parser, "entity_cross_refs"):
-                    parser.entity_cross_refs = []
-                parser.entity_cross_refs.append(
-                    EntityCrossRef(attr['type'], attr['name'], entity_name, parser.pos_to_linecol(node.position)))
 
         #Getting the label
+        entity_label = None
         labels = [x[1] for x in children if x[0] == 'entity_label']
         if len(labels) > 0:
-            entity_model['label'] = labels[0]
+            entity_label = labels[0]
         if len(labels) > 1:
             #This should never happen!
             raise Exception("There are more than one labels in the entity {}".format(entity_name))
+
+        entity_model = Entity(entity_name, attributes, entity_label)
+        #Creating EntityCrossRefs for non-primitive attributes
+        for attr in attributes:
+            if not IsPrimitiveType(attr.type):
+                if not hasattr(parser, "entity_cross_refs"):
+                    parser.entity_cross_refs = []
+                parser.entity_cross_refs.append(
+                    EntityCrossRef(attr.type, attr.name, entity_name, parser.pos_to_linecol(node.position)))
+
 
         parser.entities.append(entity_model)
         return entity_model
@@ -130,45 +133,45 @@ class Entity(SemanticAction):
 
     def second_pass(self, parser, node):
         entity_model = node
-        for attr in entity_model['attributes']:
-            attr_type = attr['type']
+        for attr in entity_model.attributes:
+            attr_type = attr.type
             if not IsPrimitiveType(attr_type):
                 cross_refs = [x for x in parser.entity_cross_refs
-                                     if x.attr_name == attr['name']
-                                        and x.attr_entity_name == entity_model['name']
+                                     if x.attr_name == attr.name
+                                        and x.attr_entity_name == entity_model.name
                                         and x.entity_name == attr_type]
                 for cross_ref in cross_refs:
-                    if cross_ref.entity_name not in [x['name'] for x in parser.entities]:
+                    if cross_ref.entity_name not in [x.name for x in parser.entities]:
                         raise SemanticError("The type of attribute '{}' type must be primitive or reference an existing entity "
                                             "at {}"
-                                            .format(attr['name'], cross_ref.position))
+                                            .format(attr.name, cross_ref.position))
 
         return
 
-entity.sem = Entity()
+entity.sem = EntitySem()
 
 
-class EntityLabel(SemanticAction):
+class EntityLabelSem(SemanticAction):
     """
     Semantic action for entity label. Returns the tuple "entity_label" and the lable as a string.
     """
     def first_pass(self, parser, node, children):
         return 'entity_label', children[0]
 
-entity_label.sem = EntityLabel()
+entity_label.sem = EntityLabelSem()
 
 
-class AttributeBlock(SemanticAction):
+class AttributeBlockSem(SemanticAction):
     """
     Semantic actions for attribute. It returns all the attribute names of an entity on the first pass
     """
     def first_pass(self, parser, node, children):
         return children
 
-attr_block.sem = AttributeBlock()
+attr_block.sem = AttributeBlockSem()
 
 
-class Attribute(SemanticAction):
+class AttributeSem(SemanticAction):
     """
     Semantic actions for attribute. It returns the attribute model with the name, type
     and description dictionary
@@ -184,23 +187,19 @@ class Attribute(SemanticAction):
         if IsKeyword(attr_name):
             raise SemanticError("Attribute name cannot be a keyword '{}' at {}"
                                 .format(attr_name, parser.pos_to_linecol(node[1].position)))
-        attr_model = {}
-        attr_model['many'] = attr_many
-        attr_model['name'] = attr_name
-        attr_model['type'] = attr_type
+        attr_model = Attribute(attr_name, attr_type, many=attr_many)
         #Checking if the attribute has descriptions
         if type(children[-1]) is tuple and children[-1][0] == 'DescrBlock':
-            attr_model['descr_block'] = children[-1][1]
+            attr_model.descriptions = children[-1][1]
         return attr_model
 
     def second_pass(self, parser, node):
-
         return
 
-attribute.sem = Attribute()
+attribute.sem = AttributeSem()
 
 
-class DescrBlock(SemanticAction):
+class DescrBlockSem(SemanticAction):
     """
     Semantic actions for description blocks. Returns the descriptions as a dictionary, or raises
     an semantic error if there are duplicate descriptions.
@@ -212,55 +211,55 @@ class DescrBlock(SemanticAction):
                                 .format(parser.pos_to_linecol(node[0].position)))
         return 'DescrBlock', retval
 
-descr_block.sem = DescrBlock()
+descr_block.sem = DescrBlockSem()
 
 
-class Required(SemanticAction):
+class RequiredSem(SemanticAction):
 
     def first_pass(self, parser, node, children):
         return 'required', True
 
-required.sem = Required()
+required.sem = RequiredSem()
 
 
-class Unique(SemanticAction):
+class UniqueSem(SemanticAction):
 
     def first_pass(self, parser, node, children):
         return 'unique', True
 
-unique.sem = Unique()
+unique.sem = UniqueSem()
 
 
-class Transient(SemanticAction):
+class TransientSem(SemanticAction):
 
     def first_pass(self, parser, node, children):
         return 'transient', True
 
-transient.sem = Transient()
+transient.sem = TransientSem()
 
 
-class ToString(SemanticAction):
+class ToStringSem(SemanticAction):
 
     def first_pass(self, parser, node, children):
         return 'toString', True
 
-toString.sem = ToString()
+toString.sem = ToStringSem()
 
 
-class ExcludeFromList(SemanticAction):
+class ExcludeFromListSem(SemanticAction):
 
     def first_pass(self, parser, node, children):
         return 'excludeFromList', True
 
-excludeFromList.sem = ExcludeFromList()
+excludeFromList.sem = ExcludeFromListSem()
 
 
-class Label(SemanticAction):
+class LabelSem(SemanticAction):
 
     def first_pass(self, parser, node, children):
         return 'label', children[0]
 
-label.sem = Label()
+label.sem = LabelSem()
 
 
 def IsKeyword(inputText):
@@ -282,7 +281,7 @@ if __name__ == "__main__":
 
     entity SecondEntity ("Second Entity") {
         //Second entity
-        many attribute1 : FirstEntity;
+        many attribute1 : SecondEntity;
         attr2 : date(toString, label="Attribute quotes number 'two' .");
 
     }
@@ -306,6 +305,10 @@ if __name__ == "__main__":
     # print("{} = {}".format(input, parser.getASG()))
     pyParser.getASG()
 
+    enviroment = Environment(loader=FileSystemLoader('templates/'))
+    template = enviroment.get_template('entity_template.html')
+    for ent in pyParser.entities:
+        print template.render(entity=ent)
+
     #Pretty printing the model
-    pp = pprint.PrettyPrinter(indent=4)
-    pp.pprint(pyParser.entities)
+    # print(pyParser.entities)
