@@ -1,0 +1,23 @@
+config {
+        app_name = "first_project";
+        platforms = ios, android;
+        android_specifics = {
+            min_version = 9;
+            max_version = 9;
+        }
+        start_screen = Fdfa;
+    }
+
+entity FirstEntity {
+    //First entity
+    name : string(required, unique, excludeFromList);
+    age : int(label='Age of "the" entity', toString);
+
+}
+
+entity SecondEntity ("Second Entity") {
+    //Second entity
+    many attribute1 : SecondEntity;
+    attr2 : date(toString, label="Attribute quotes number 'two' .");
+
+}

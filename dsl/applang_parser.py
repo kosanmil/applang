@@ -9,11 +9,36 @@ from arpeggio import *
 from arpeggio.export import PMDOTExporter, PTDOTExporter
 from arpeggio import RegExMatch as _
 from jinja2 import Environment, FileSystemLoader
-
-
 from applang_model import *
 
-def model():            return ZeroOrMore(entity), EOF
+
+def model():            return config, ZeroOrMore([entity]), EOF
+
+#Config parser rules
+def config():           return CONFIG_KWD, "{", ZeroOrMore(config_entry), "}"
+def config_entry():     return [config_app_name, config_platforms, config_namespace,
+                                config_start_screen, config_android_specifics]
+def config_app_name():          return CONFIG_APP_NAME_KWD, "=", STRING, ";"
+def config_namespace():         return CONFIG_NAMESPACE_KWD, "=", STRING, ";"
+def config_start_screen():      return CONFIG_START_SCREEN_KWD, "=", ID, ";"
+
+#Config platforms
+def config_platforms():         return CONFIG_PLATFORMS_KWD, "=", platform_available, \
+                                        ZeroOrMore(",", platform_available), ";"
+def platform_available():       return [platform_android, platform_ios, platform_windows_phone]
+def platform_android():         return PLATFORM_ANDROID_KWD
+def platform_ios():             return PLATFORM_IOS_KWD
+def platform_windows_phone():   return PLATFORM_WINDOWS_PHONE_KWD
+
+#Config android specifics
+def config_android_specifics(): return CONFIG_ANDROID_SPECS_KWD, "=", "{", \
+                                       ZeroOrMore(android_specifics_entry), "}"
+def android_specifics_entry():  return [android_min_version, android_max_version, android_target_version]
+def android_min_version():      return ANDROID_MIN_VERSION_KWD, "=", INT, ";"
+def android_max_version():      return ANDROID_MAX_VERSION_KWD, "=", INT, ";"
+def android_target_version():   return ANDROID_TARGET_VERSION_KWD, "=", INT, ";"
+
+#Entity parser rules
 def entity():           return ENTITY_KWD, FirstUpperID, Optional(entity_label), attr_block
 def entity_label():     return "(", STRING, ")"
 def attr_block():       return "{", ZeroOrMore(attribute), "}"
@@ -31,8 +56,30 @@ def excludeFromList():  return EXCLUDE_FROM_LIST_KWD
 def label():            return LABEL_KWD, "=", STRING
 
 
-#Attribute Descriptions Keywords
+#Root Keywords
+def CONFIG_KWD():           return "config"
 def ENTITY_KWD():           return "entity"
+
+#Config entries keywords
+def CONFIG_APP_NAME_KWD():      return "app_name"
+def CONFIG_NAMESPACE_KWD():     return "namespace"
+def CONFIG_PLATFORMS_KWD():     return "platforms"
+def CONFIG_ANDROID_SPECS_KWD(): return "android_specifics"
+def CONFIG_START_SCREEN_KWD():  return "start_screen"
+
+#Available platforms keywords
+def PLATFORM_ANDROID_KWD():         return "android"
+def PLATFORM_IOS_KWD():             return "ios"
+def PLATFORM_WINDOWS_PHONE_KWD():   return "windows_phone"
+
+PLATFORMS_KEYWORDS = [PLATFORM_ANDROID_KWD(), PLATFORM_IOS_KWD(), PLATFORM_WINDOWS_PHONE_KWD()]
+
+#Android specifics keywords
+def ANDROID_MIN_VERSION_KWD():      return "min_version"
+def ANDROID_MAX_VERSION_KWD():      return "max_version"
+def ANDROID_TARGET_VERSION_KWD():   return "target_version"
+
+#Attribute descriptions keywords
 def MANY_KWD():             return "many"
 def REQUIRED_KWD():         return "required"
 def UNIQUE_KWD():           return "unique"
@@ -41,8 +88,11 @@ def TO_STRING_KWD():        return "toString"
 def EXCLUDE_FROM_LIST_KWD():return "excludeFromList"
 def LABEL_KWD():            return "label"
 
-DESCR_KEYWORDS = [ENTITY_KWD(), MANY_KWD(), REQUIRED_KWD(), UNIQUE_KWD(),
-            TRANSIENT_KWD(), TO_STRING_KWD(), EXCLUDE_FROM_LIST_KWD(), LABEL_KWD()]
+PARSER_KEYWORDS = [CONFIG_KWD(), CONFIG_APP_NAME_KWD(), CONFIG_NAMESPACE_KWD(), CONFIG_PLATFORMS_KWD(),
+                  CONFIG_ANDROID_SPECS_KWD(), CONFIG_START_SCREEN_KWD(),
+                  ANDROID_MIN_VERSION_KWD(), ANDROID_MAX_VERSION_KWD(), ANDROID_TARGET_VERSION_KWD(),
+                  ENTITY_KWD(), MANY_KWD(), REQUIRED_KWD(), UNIQUE_KWD(),
+                  TRANSIENT_KWD(), TO_STRING_KWD(), EXCLUDE_FROM_LIST_KWD(), LABEL_KWD()]
 
 #Primitive types
 def INTEGER_KWD():          return "int"
@@ -53,12 +103,15 @@ def DATE_KWD():             return "date"
 
 PRIM_TYPES_KEYWORDS = [INTEGER_KWD(), STRING_KWD(), FLOAT_KWD(), BOOL_KWD(), DATE_KWD()]
 
-KEYWORDS = DESCR_KEYWORDS + PRIM_TYPES_KEYWORDS
+ALL_KEYWORDS = PLATFORMS_KEYWORDS + PARSER_KEYWORDS + PRIM_TYPES_KEYWORDS
 
 #Regex
 def ID():               return _(r'([a-z]|[A-Z]|_)([a-z]|[A-Z]|_|[0-9])*')
 def FirstUpperID():     return _(r'([A-Z])([a-z]|[A-Z]|_|[0-9])*')
-def STRING():           return _(r"""("(?:\\.|[^\\"])*")|('(?:\\.|[^\\'])*')""")
+def STRING():           return [("'", _(r"((\\')|[^'])*"),"'"),\
+                                    ('"', _(r'((\\")|[^"])*'),'"')]
+def INT():              return _(r'[-+]?[0-9]+')
+def FLOAT():                return _(r'[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?')
 
 
 def comment():          return [_("//.*"), _("/\*.*\*/")]
@@ -85,10 +138,162 @@ class EntityCrossRef(object):
 
 # Semantic actions
 
+class ConfigSem(SemanticAction):
+
+    def first_pass(self, parser, node, children):
+        """
+        Checks if there are duplicate configuration entries and if this is a duplicate configuration.
+        Puts the config model in the parser, and returns the model for the second pass if needed.
+        """
+        if hasattr(parser, "config") and isinstance(parser.config, Config):
+            raise SemanticError("Multiple configs exist at {}!"
+                                .format(parser.pos_to_linecol(node.position)))
+        children_dict = dict(children)
+        if len(children_dict) != len(children):
+            raise SemanticError("There are duplicate configuration entries in the configuration at {}!"
+                                .format(parser.pos_to_linecol(node.position)))
+        config_model = Config()
+        #Checking if app_name exists
+        if CONFIG_APP_NAME_KWD() not in children_dict:
+            raise SemanticError("The field '{}' is required in the configuration at {}!"
+                                .format(CONFIG_APP_NAME_KWD(), parser.pos_to_linecol(node.position)))
+        config_model.app_name = children_dict.get(CONFIG_APP_NAME_KWD())
+        config_model.namespace = children_dict.get(CONFIG_APP_NAME_KWD(), None)
+        #Checking if there is at least one platform specified
+        if CONFIG_PLATFORMS_KWD() not in children_dict:
+            raise SemanticError("At least one platform must be specified in the configuration at {}!"
+                                .format(parser.pos_to_linecol(node.position)))
+        config_model.platforms = children_dict[CONFIG_PLATFORMS_KWD()]
+        #Checking if android specifics exists and the android platform is specified
+        if CONFIG_ANDROID_SPECS_KWD() in children_dict:
+            if Platforms.ANDROID not in config_model.platforms:
+                raise SemanticError("Android specifics cannot be added without adding Android to the platform at {}!"
+                                    .format(parser.pos_to_linecol(node.position)))
+        config_model.android_specifics = children_dict.get(CONFIG_ANDROID_SPECS_KWD(), AndroidSpecifics())
+        config_model.start_screen = children_dict.get(CONFIG_START_SCREEN_KWD(), None)
+
+        parser.config = config_model
+        return config_model
+
+config.sem = ConfigSem()
+
+
+class ConfigAppNameSem(SemanticAction):
+    def first_pass(self, parser, node, children):
+        return CONFIG_APP_NAME_KWD(), children[0]
+
+config_app_name.sem = ConfigAppNameSem()
+
+
+class ConfigNamespaceSem(SemanticAction):
+    def first_pass(self, parser, node, children):
+        return CONFIG_NAMESPACE_KWD(), children[0]
+
+config_namespace.sem = ConfigNamespaceSem()
+
+
+class ConfigPlatformsSem(SemanticAction):
+    """
+    Check if there are duplicate platforms specified
+    """
+    def first_pass(self, parser, node, children):
+        if len(children) == 0:
+            raise SemanticError("At least one platform must be specified in the configuration at {}!"
+                                .format(parser.pos_to_linecol(node.position)))
+        if len(children) != len(set(children)):
+            raise SemanticError("Duplicate platforms specified at {}!"
+                                .format(parser.pos_to_linecol(node.position)))
+        return CONFIG_PLATFORMS_KWD(), children
+
+config_platforms.sem = ConfigPlatformsSem()
+
+
+class PlatformAndroidSem(SemanticAction):
+    def first_pass(self, parser, node, children):
+        return Platforms.ANDROID
+
+platform_android.sem = PlatformAndroidSem()
+
+
+class PlatformIOSSem(SemanticAction):
+    def first_pass(self, parser, node, children):
+        return Platforms.IOS
+
+platform_ios.sem = PlatformIOSSem()
+
+
+class PlatformWindowsPhoneSem(SemanticAction):
+    def first_pass(self, parser, node, children):
+        return Platforms.WINDOWS_PHONE
+
+platform_windows_phone.sem = PlatformWindowsPhoneSem()
+
+
+class ConfigAndroidSpecificsSem(SemanticAction):
+    def first_pass(self, parser, node, children):
+        """
+        Checks if there are duplicate entries in the Android specifics,
+        and if version numbers are valid (max >= target => min)
+        """
+        children_dict = dict(children)
+        if len(children_dict) != len(children):
+            raise SemanticError("There are duplicate entries in the android specifics at {}!"
+                                .format(parser.pos_to_linecol(node.position)))
+        android_specs_model = AndroidSpecifics(
+                min_version=children_dict.get(ANDROID_MIN_VERSION_KWD(), None),
+                max_version=children_dict.get(ANDROID_MAX_VERSION_KWD(), None),
+                target_version=children_dict.get(ANDROID_TARGET_VERSION_KWD(), None)
+        )
+        if android_specs_model.min_version > android_specs_model.max_version:
+            raise SemanticError("Android: min version ({}) cannot be greater than the max version ({}) at {}"
+                                .format(android_specs_model.min_version, android_specs_model.max_version,
+                                        parser.pos_to_linecol(node.position)))
+        if android_specs_model.target_version > android_specs_model.max_version:
+            raise SemanticError("Android: target version ({}) cannot be greater than the max version ({}) at {}"
+                                .format(android_specs_model.target_version, android_specs_model.max_version,
+                                        parser.pos_to_linecol(node.position)))
+        if android_specs_model.min_version > android_specs_model.target_version:
+            raise SemanticError("Android: min version ({}) cannot be greater than the target version ({}) at {}"
+                                .format(android_specs_model.min_version, android_specs_model.target_version,
+                                        parser.pos_to_linecol(node.position)))
+        return CONFIG_ANDROID_SPECS_KWD(), android_specs_model
+
+config_android_specifics.sem = ConfigAndroidSpecificsSem()
+
+
+class AndroidMinVersionSem(SemanticAction):
+    def first_pass(self, parser, node, children):
+        return ANDROID_MIN_VERSION_KWD(), int(children[0])
+
+android_min_version.sem = AndroidMinVersionSem()
+
+
+class AndroidMaxVersionSem(SemanticAction):
+    def first_pass(self, parser, node, children):
+        return ANDROID_MAX_VERSION_KWD(), int(children[0])
+
+android_max_version.sem = AndroidMaxVersionSem()
+
+
+class AndroidTargetVersionSem(SemanticAction):
+    def first_pass(self, parser, node, children):
+        return ANDROID_TARGET_VERSION_KWD(), int(children[0])
+
+android_target_version.sem = AndroidTargetVersionSem()
+
+
+class ConfigStartScreenSem(SemanticAction):
+    def first_pass(self, parser, node, children):
+        return CONFIG_START_SCREEN_KWD(), children[0]
+
+config_start_screen.sem = ConfigStartScreenSem();
+
+
 class EntitySem(SemanticAction):
     """
     Semantic actions for entity. It checks if there are multiple entities with the same name, or
     if there are multiple attributes with the same name inside a single entity.
+    Returns the entity model on the first pass
     """
     def first_pass(self, parser, node, children):
         #Check for duplicate entity names
@@ -205,11 +410,11 @@ class DescrBlockSem(SemanticAction):
     an semantic error if there are duplicate descriptions.
     """
     def first_pass(self, parser, node, children):
-        retval = dict(children)
-        if len(retval) != len(children):
+        children_dict = dict(children)
+        if len(children_dict) != len(children):
             raise SemanticError("There are duplicate descriptions in the attribute at {}!"
                                 .format(parser.pos_to_linecol(node[0].position)))
-        return 'DescrBlock', retval
+        return 'DescrBlock', children_dict
 
 descr_block.sem = DescrBlockSem()
 
@@ -217,7 +422,7 @@ descr_block.sem = DescrBlockSem()
 class RequiredSem(SemanticAction):
 
     def first_pass(self, parser, node, children):
-        return 'required', True
+        return REQUIRED_KWD(), True
 
 required.sem = RequiredSem()
 
@@ -225,7 +430,7 @@ required.sem = RequiredSem()
 class UniqueSem(SemanticAction):
 
     def first_pass(self, parser, node, children):
-        return 'unique', True
+        return UNIQUE_KWD(), True
 
 unique.sem = UniqueSem()
 
@@ -233,7 +438,7 @@ unique.sem = UniqueSem()
 class TransientSem(SemanticAction):
 
     def first_pass(self, parser, node, children):
-        return 'transient', True
+        return TRANSIENT_KWD(), True
 
 transient.sem = TransientSem()
 
@@ -241,7 +446,7 @@ transient.sem = TransientSem()
 class ToStringSem(SemanticAction):
 
     def first_pass(self, parser, node, children):
-        return 'toString', True
+        return TO_STRING_KWD(), True
 
 toString.sem = ToStringSem()
 
@@ -249,7 +454,7 @@ toString.sem = ToStringSem()
 class ExcludeFromListSem(SemanticAction):
 
     def first_pass(self, parser, node, children):
-        return 'excludeFromList', True
+        return EXCLUDE_FROM_LIST_KWD(), True
 
 excludeFromList.sem = ExcludeFromListSem()
 
@@ -257,58 +462,69 @@ excludeFromList.sem = ExcludeFromListSem()
 class LabelSem(SemanticAction):
 
     def first_pass(self, parser, node, children):
-        return 'label', children[0]
+        return LABEL_KWD(), children[0]
 
 label.sem = LabelSem()
 
 
 def IsKeyword(inputText):
-    return inputText in KEYWORDS
+    return inputText in ALL_KEYWORDS
+
 
 def IsPrimitiveType(inputType):
     return inputType in PRIM_TYPES_KEYWORDS
 
 
-if __name__ == "__main__":
+def parse_from_str(language_def, debug=False):
+    """
+    Constructs parser and initializes the model that is put into the parser.
 
-    input = """
-    entity FirstEntity {
-        //First entity
-        name : string(required, unique, excludeFromList);
-        age : int(label='Age of "the" entity', toString);
+    Args:
+        language_def (str): The language in applang.
 
-    }
-
-    entity SecondEntity ("Second Entity") {
-        //Second entity
-        many attribute1 : SecondEntity;
-        attr2 : date(toString, label="Attribute quotes number 'two' .");
-
-    }
-
+    Returns:
+        The parser with the initialized model.
     """
 
-    pyParser = ParserPython(model, comment)
+    if debug:
+        print("*** APPLANG PARSER ***")
 
-    PMDOTExporter().exportFile(pyParser.parser_model,
+    # First create parser for TextX descriptions
+    parser = ParserPython(model, comment_def=comment, debug=debug)
+
+    PMDOTExporter().exportFile(parser.parser_model,
                                "applang_parse_tree_model.dot")
+    # Parse language description with textX parser
+    parse_tree = parser.parse(language_def)
 
-    parse_tree = pyParser.parse(input)
+    #Invoice semantic analyze
+    lang_parser = parser.getASG()
 
-    # Then we export it to a dot file in order to visualise it.
-    # This is also optional.
-    PTDOTExporter().exportFile(parse_tree, "applang_parse_tree.dot")
+    if debug:
+        # Create dot file for debuging purposes
+        PTDOTExporter().exportFile(parse_tree, "applang_parse_tree.dot")
 
-    # getASG will start semantic analysis.
-    # In this case semantic analysis will evaluate expression and
-    # returned value will be the result of the input_expr expression.
-    # print("{} = {}".format(input, parser.getASG()))
-    pyParser.getASG()
+    return parser
 
-    enviroment = Environment(loader=FileSystemLoader('templates/'))
-    template = enviroment.get_template('entity_template.html')
-    for ent in pyParser.entities:
-        print template.render(entity=ent)
 
-    #Pretty printing the model
-    # print(pyParser.entities)
+def parse_from_file(file_name, debug=False):
+    """
+    Constructs parser and initializes the model that is put into the parser.
+
+    Args:
+        language_def (str): The file_name that contains the language in applang.
+
+    Returns:
+        The parser with the initialized model.
+    """
+    with open(file_name, 'r') as f:
+        lang_desc = f.read()
+
+    parser = parse_from_str(lang_desc, debug)
+
+    return parser
+
+
+if __name__ == "__main__":
+
+    parse_from_file("example.alang")
