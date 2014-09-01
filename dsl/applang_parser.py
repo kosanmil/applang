@@ -18,8 +18,8 @@ def model():            return config, ZeroOrMore([entity]), EOF
 def config():           return CONFIG_KWD, "{", ZeroOrMore(config_entry), "}"
 def config_entry():     return [config_app_name, config_platforms, config_namespace,
                                 config_start_screen, config_android_specifics]
-def config_app_name():          return CONFIG_APP_NAME_KWD, "=", STRING, ";"
-def config_namespace():         return CONFIG_NAMESPACE_KWD, "=", STRING, ";"
+def config_app_name():          return CONFIG_APP_NAME_KWD, "=", ID, ";"
+def config_namespace():         return CONFIG_NAMESPACE_KWD, "=", QNAME, ";"
 def config_start_screen():      return CONFIG_START_SCREEN_KWD, "=", ID, ";"
 
 #Config platforms
@@ -33,7 +33,9 @@ def platform_windows_phone():   return PLATFORM_WINDOWS_PHONE_KWD
 #Config android specifics
 def config_android_specifics(): return CONFIG_ANDROID_SPECS_KWD, "=", "{", \
                                        ZeroOrMore(android_specifics_entry), "}"
-def android_specifics_entry():  return [android_min_version, android_max_version, android_target_version]
+def android_specifics_entry():  return [android_sdk_path, android_target_version,
+                                        android_min_version, android_max_version]
+def android_sdk_path():         return ANDROID_SDK_PATH_KWD, "=", STRING, ";"
 def android_min_version():      return ANDROID_MIN_VERSION_KWD, "=", INT, ";"
 def android_max_version():      return ANDROID_MAX_VERSION_KWD, "=", INT, ";"
 def android_target_version():   return ANDROID_TARGET_VERSION_KWD, "=", INT, ";"
@@ -75,6 +77,7 @@ def PLATFORM_WINDOWS_PHONE_KWD():   return "windows_phone"
 PLATFORMS_KEYWORDS = [PLATFORM_ANDROID_KWD(), PLATFORM_IOS_KWD(), PLATFORM_WINDOWS_PHONE_KWD()]
 
 #Android specifics keywords
+def ANDROID_SDK_PATH_KWD():         return "sdk_path"
 def ANDROID_MIN_VERSION_KWD():      return "min_version"
 def ANDROID_MAX_VERSION_KWD():      return "max_version"
 def ANDROID_TARGET_VERSION_KWD():   return "target_version"
@@ -90,7 +93,8 @@ def LABEL_KWD():            return "label"
 
 PARSER_KEYWORDS = [CONFIG_KWD(), CONFIG_APP_NAME_KWD(), CONFIG_NAMESPACE_KWD(), CONFIG_PLATFORMS_KWD(),
                   CONFIG_ANDROID_SPECS_KWD(), CONFIG_START_SCREEN_KWD(),
-                  ANDROID_MIN_VERSION_KWD(), ANDROID_MAX_VERSION_KWD(), ANDROID_TARGET_VERSION_KWD(),
+                  ANDROID_SDK_PATH_KWD(), ANDROID_MIN_VERSION_KWD(),
+                  ANDROID_MAX_VERSION_KWD(), ANDROID_TARGET_VERSION_KWD(),
                   ENTITY_KWD(), MANY_KWD(), REQUIRED_KWD(), UNIQUE_KWD(),
                   TRANSIENT_KWD(), TO_STRING_KWD(), EXCLUDE_FROM_LIST_KWD(), LABEL_KWD()]
 
@@ -111,7 +115,8 @@ def FirstUpperID():     return _(r'([A-Z])([a-z]|[A-Z]|_|[0-9])*')
 def STRING():           return [("'", _(r"((\\')|[^'])*"),"'"),\
                                     ('"', _(r'((\\")|[^"])*'),'"')]
 def INT():              return _(r'[-+]?[0-9]+')
-def FLOAT():                return _(r'[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?')
+def FLOAT():            return _(r'[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?')
+def QNAME():            return _(r'([a-zA-Z_][a-zA-Z\d_]*\.)*[a-zA-Z_][a-zA-Z\d_]*')
 
 
 def comment():          return [_("//.*"), _("/\*.*\*/")]
@@ -157,19 +162,24 @@ class ConfigSem(SemanticAction):
         if CONFIG_APP_NAME_KWD() not in children_dict:
             raise SemanticError("The field '{}' is required in the configuration at {}!"
                                 .format(CONFIG_APP_NAME_KWD(), parser.pos_to_linecol(node.position)))
+        #Checking if namespace exists
+        if CONFIG_NAMESPACE_KWD() not in children_dict:
+            raise SemanticError("The field '{}' is required in the configuration at {}!"
+                                .format(CONFIG_NAMESPACE_KWD(), parser.pos_to_linecol(node.position)))
         config_model.app_name = children_dict.get(CONFIG_APP_NAME_KWD())
-        config_model.namespace = children_dict.get(CONFIG_APP_NAME_KWD(), None)
+        config_model.namespace = children_dict.get(CONFIG_NAMESPACE_KWD(), None)
         #Checking if there is at least one platform specified
         if CONFIG_PLATFORMS_KWD() not in children_dict:
             raise SemanticError("At least one platform must be specified in the configuration at {}!"
                                 .format(parser.pos_to_linecol(node.position)))
         config_model.platforms = children_dict[CONFIG_PLATFORMS_KWD()]
-        #Checking if android specifics exists and the android platform is specified
-        if CONFIG_ANDROID_SPECS_KWD() in children_dict:
-            if Platforms.ANDROID not in config_model.platforms:
-                raise SemanticError("Android specifics cannot be added without adding Android to the platform at {}!"
-                                    .format(parser.pos_to_linecol(node.position)))
-        config_model.android_specifics = children_dict.get(CONFIG_ANDROID_SPECS_KWD(), AndroidSpecifics())
+        #Decided that there is no need to check if android platform exists for android specifications
+        #Maybe throw a warning?
+        # if CONFIG_ANDROID_SPECS_KWD() in children_dict:
+        #     if Platforms.ANDROID not in config_model.platforms:
+        #         raise SemanticError("Android specifics cannot be added without adding Android to the platform at {}!"
+        #                             .format(parser.pos_to_linecol(node.position)))
+        config_model.android_specifics = children_dict.get(CONFIG_ANDROID_SPECS_KWD(), None)
         config_model.start_screen = children_dict.get(CONFIG_START_SCREEN_KWD(), None)
 
         parser.config = config_model
@@ -240,18 +250,20 @@ class ConfigAndroidSpecificsSem(SemanticAction):
             raise SemanticError("There are duplicate entries in the android specifics at {}!"
                                 .format(parser.pos_to_linecol(node.position)))
         android_specs_model = AndroidSpecifics(
+                sdk_path=children_dict.get(ANDROID_SDK_PATH_KWD(), None),
                 min_version=children_dict.get(ANDROID_MIN_VERSION_KWD(), None),
                 max_version=children_dict.get(ANDROID_MAX_VERSION_KWD(), None),
                 target_version=children_dict.get(ANDROID_TARGET_VERSION_KWD(), None)
         )
-        if android_specs_model.min_version > android_specs_model.max_version:
-            raise SemanticError("Android: min version ({}) cannot be greater than the max version ({}) at {}"
-                                .format(android_specs_model.min_version, android_specs_model.max_version,
-                                        parser.pos_to_linecol(node.position)))
-        if android_specs_model.target_version > android_specs_model.max_version:
-            raise SemanticError("Android: target version ({}) cannot be greater than the max version ({}) at {}"
-                                .format(android_specs_model.target_version, android_specs_model.max_version,
-                                        parser.pos_to_linecol(node.position)))
+        if android_specs_model.max_version is not None:
+            if android_specs_model.min_version > android_specs_model.max_version:
+                raise SemanticError("Android: min version ({}) cannot be greater than the max version ({}) at {}"
+                                    .format(android_specs_model.min_version, android_specs_model.max_version,
+                                            parser.pos_to_linecol(node.position)))
+            if android_specs_model.target_version > android_specs_model.max_version:
+                raise SemanticError("Android: target version ({}) cannot be greater than the max version ({}) at {}"
+                                    .format(android_specs_model.target_version, android_specs_model.max_version,
+                                            parser.pos_to_linecol(node.position)))
         if android_specs_model.min_version > android_specs_model.target_version:
             raise SemanticError("Android: min version ({}) cannot be greater than the target version ({}) at {}"
                                 .format(android_specs_model.min_version, android_specs_model.target_version,
@@ -259,6 +271,13 @@ class ConfigAndroidSpecificsSem(SemanticAction):
         return CONFIG_ANDROID_SPECS_KWD(), android_specs_model
 
 config_android_specifics.sem = ConfigAndroidSpecificsSem()
+
+
+class AndroidSdkPathSem(SemanticAction):
+    def first_pass(self, parser, node, children):
+        return ANDROID_SDK_PATH_KWD(), children[0]
+
+android_sdk_path.sem = AndroidSdkPathSem()
 
 
 class AndroidMinVersionSem(SemanticAction):
@@ -286,7 +305,7 @@ class ConfigStartScreenSem(SemanticAction):
     def first_pass(self, parser, node, children):
         return CONFIG_START_SCREEN_KWD(), children[0]
 
-config_start_screen.sem = ConfigStartScreenSem();
+config_start_screen.sem = ConfigStartScreenSem()
 
 
 class EntitySem(SemanticAction):

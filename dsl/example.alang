@@ -1,9 +1,11 @@
 config {
-        app_name = "first_project";
-        platforms = ios, android;
+        app_name = prvi_projekat;
+        namespace = master;
+        platforms = android, ios;
         android_specifics = {
-            min_version = 9;
-            max_version = 9;
+            sdk_path = "/home/kosan/software/android-sdk-linux";
+            min_version = 7;
+            target_version = 19;
         }
         start_screen = Fdfa;
     }

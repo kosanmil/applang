@@ -5,12 +5,19 @@
 #
 #######################################################################
 
-from pprint import pprint
+from consts import DEF_ANDROID_TARGET_VER, DEF_ANDROID_MIN_VER
 
 
 class Config:
     """
-    Config model. NOTE: The property names must be the same as the keywords in the parser.
+    Config model.
+    Properties:
+        app_name(str): Name of the application
+        namespace(str): Namespace of the application
+        platforms(collection(Platform)): Collection of platforms for which to develop
+        android_specifics(AndroidSpecifics): Specific settings for the Android platform
+        start_screen(str or something): Start_screen of the application.
+            Can be either an entity or a menu or a splash screen (not yet implemented)
     """
     def __init__(self, app_name=None, namespace=None, platforms=None,
                  android_specifics=None, start_screen=None):
@@ -20,24 +27,35 @@ class Config:
         self.android_specifics = android_specifics
         self.start_screen = start_screen
 
+    @property
+    def full_qname(self):
+        """Fully qualified name (namespace.app_name)"""
+        return self.namespace + "." + self.app_name
+
 
 class Platforms:
-    '''
-    Enum class for holding the available platforms. N
-    Not sure if this is pythonic, will try it out and see.
-    '''
     ANDROID = 'android'
     IOS = 'iOS'
     WINDOWS_PHONE = 'windows_phone'
 
 
 class AndroidSpecifics:
-
-    def __init__(self, min_version=None, max_version=None, target_version=None):
-        self.min_version = min_version if min_version is not None else 8
-        self.max_version = max_version if max_version is not None else 18
-        self.target_version = target_version if target_version is not None else self.max_version
-
+    """
+    Model for specific settings for the Android platform.
+    Properties:
+        sdk_path(str): Path to the Android SDK. Used for getting the required libraries from the SDK.
+        min_version(int): Minimum API version to be supported.
+        max_version(int): Maximum API version to be supported.
+        target_version(int): Target API version.
+    """
+    def __init__(self, sdk_path=None, min_version=None, max_version=None, target_version=None):
+        self.min_version = min_version if min_version is not None else DEF_ANDROID_MIN_VER
+        self.target_version = target_version if target_version is not None else DEF_ANDROID_TARGET_VER
+        self.max_version = max_version
+        self.sdk_path = sdk_path
+        if type(self.sdk_path) is str:
+            if len(self.sdk_path) > 0 and self.sdk_path[-1] != '/':
+                self.sdk_path += '/'
 
 
 class Entity:
