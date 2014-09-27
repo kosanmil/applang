@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+	style="@style/LayoutScrollView">
+	<TableLayout 
+		style="@style/Layout.MarginsLeftRightBottom"
+	    android:shrinkColumns="1" >
+	
+	    <TableRow>
+	
+	        <TextView
+	            android:id="@+id/tvNazivLabel" 
+	            android:text="@string/ent_firma_naziv"
+       			style="@style/TextViewLabel" />
+	
+	        <EditText
+	            android:id="@+id/etNaziv"
+	            android:hint="@string/ent_firma_naziv"
+	            android:inputType="textCapSentences"
+	            style="@style/Input.EditText" >
+	            
+	        	<requestFocus />
+	        </EditText>
+	    </TableRow>
+	
+	    <TableRow>
+	
+	        <TextView
+	            android:id="@+id/tvPibLabel" 
+	            android:text="@string/ent_firma_pib"
+       			style="@style/TextViewLabel"
+	            />
+	
+	        <EditText
+	            android:id="@+id/etPib" 
+	            android:hint="@string/ent_firma_pib"
+	            android:inputType="number"
+	            style="@style/Input.EditText" />
+	    </TableRow>
+	    
+	    <TableRow>
+	
+	        <TextView
+	            android:id="@+id/tvAdresaLabel" 
+	            android:text="@string/ent_firma_adresa"
+       			style="@style/TextViewLabel"
+	            />
+	
+	        <EditText
+	            android:id="@+id/etAdresa" 
+	            android:hint="@string/ent_firma_adresa"
+	            android:inputType="textCapWords"
+	            style="@style/Input.EditText" />
+	    </TableRow>
+	
+	    <TableRow>
+	
+	        <TextView
+	            android:id="@+id/tvNaseljenoMestoLabel" 
+	            android:text="@string/ent_firma_naseljeno_mesto"
+       			style="@style/TextViewLabel" />
+	
+	        <Spinner android:id="@+id/spNaseljenoMesto" 
+	            style="@style/Input"/>
+	    </TableRow>
+	    
+	    <TableRow>
+	
+	        <TextView
+	            android:id="@+id/tvNadfirmaLabel" 
+	            android:text="@string/ent_firma_nadfirma"
+       			style="@style/TextViewLabel" />
+	
+	        <Spinner android:id="@+id/spNadfirma"
+	            style="@style/Input"/>
+	    </TableRow>
+	    
+	    <TableRow>
+	
+	        <TextView
+	            android:id="@+id/tvTelefonLabel" 
+	            android:text="@string/ent_firma_telefon"
+       			style="@style/TextViewLabel" />
+	
+	        <EditText
+	            android:id="@+id/etTelefon" 
+	            android:hint="@string/ent_firma_telefon"
+	            android:inputType="phone"
+	            style="@style/Input.EditText" >
+	            
+	        </EditText>
+	    </TableRow>
+	    
+	    <TableRow>
+
+            <TextView
+                android:id="@+id/tvDatumOsnivanjaLabel" 
+                android:text="@string/ent_firma_datum_osnivanja"
+       			style="@style/TextViewLabel" />
+
+            <DatePicker
+                android:id="@+id/dpDatumOsnivanja"
+                android:calendarViewShown="false"
+                 />
+
+        </TableRow>
+	
+	    <TableRow>
+	
+	        <TextView
+	            android:id="@+id/tvDomacaLabel" 
+	            android:text="@string/ent_firma_domaca"
+       			style="@style/TextViewLabel" />
+	
+	        <CheckBox 
+	            android:id="@+id/cbDomaca" />
+	    </TableRow>
+	    
+	    <TableRow>
+	
+	        <TextView
+	            android:id="@+id/tvOpisLabel" 
+	            android:text="@string/ent_firma_opis"
+       			style="@style/TextViewLabel" />
+	
+	        <EditText
+	            android:id="@+id/etOpis"
+	            android:hint="@string/ent_firma_opis"
+	            style="@style/Input.TextArea" />
+	    </TableRow>
+	
+	</TableLayout>
+</ScrollView>

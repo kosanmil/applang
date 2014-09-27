@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+	style="@style/LayoutScrollView" >
+
+    <TableLayout
+		style="@style/Layout.MarginsLeftRightBottom"
+        android:shrinkColumns="1" >
+
+        <TableRow>
+
+            <TextView
+                android:id="@+id/tvSifraLabel"
+                style="@style/TextViewLabel"
+                android:text="@string/ent_drzava_sifra" />
+
+            <EditText
+                android:id="@+id/etSifra" 
+                android:hint="@string/ent_drzava_sifra"
+                android:inputType="textCapSentences"
+                style="@style/Input.EditText" >
+            </EditText>
+        </TableRow>
+
+        <TableRow>
+
+            <TextView
+                android:id="@+id/tvNazivLabel"
+                style="@style/TextViewLabel"
+                android:text="@string/ent_drzava_naziv" />
+
+            <EditText
+                android:id="@+id/etNaziv" 
+                android:hint="@string/ent_drzava_naziv"
+                android:inputType="textCapSentences"
+                style="@style/Input.EditText" />
+        </TableRow>
+
+        <TableRow>
+
+            <TextView
+                android:id="@+id/tvZastavaLabel"
+                style="@style/TextViewLabel"
+                android:text="@string/ent_drzava_zastava" />
+
+            <Button
+                android:id="@+id/btnZastava"
+                android:layout_width="wrap_content"
+                android:layout_gravity="start"
+                android:text="@string/btn_change_image" />
+ 
+            <Button
+                android:id="@+id/btnZastavaDismiss"
+                android:layout_width="wrap_content"
+                android:text="@string/btn_clear_image" />
+
+            <ImageView
+                android:id="@+id/ivZastava"
+                android:contentDescription="@string/ent_drzava_zastava"
+                style="@style/ImageViewInput" />
+        </TableRow>
+    </TableLayout>
+
+</ScrollView>

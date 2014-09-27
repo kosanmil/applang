@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+    <TableLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+		style="@style/LayoutListItem"
+    	android:shrinkColumns="1" >
+
+        <TableRow 
+			style="@style/ListItemDivider.First">
+
+            <TextView
+                android:id="@+id/tvSifraLabel" 
+                android:text="@string/ent_drzava_sifra"
+  				style="@style/TextViewLabel" />
+
+            <TextView
+                android:id="@+id/tvSifra"
+                android:text="@string/ent_drzava_sifra" />
+        </TableRow>
+
+        <TableRow
+			style="@style/ListItemDivider">
+
+            <TextView
+                android:id="@+id/tvNazivLabel" 
+                android:text="@string/ent_drzava_naziv"
+  				style="@style/TextViewLabel" />
+
+            <TextView
+                android:id="@+id/tvNaziv"
+                android:text="@string/ent_drzava_naziv" />
+        </TableRow>
+        
+        <TableRow 
+            style="@style/ListItemDivider">
+            
+            <TextView
+                android:id="@+id/tvZastavaLabel" 
+                android:text="@string/ent_drzava_zastava"
+   				style="@style/TextViewLabel" />
+
+            <ImageView
+                android:id="@+id/ivZastava"
+                android:contentDescription="@string/ent_drzava_zastava"
+                style="@style/ImageViewList" />
+         </TableRow>
+    </TableLayout>

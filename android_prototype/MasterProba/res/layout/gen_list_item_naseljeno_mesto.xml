@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+    <TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+		style="@style/LayoutListItem"
+    	android:shrinkColumns="1" >
+
+        <TableRow
+			style="@style/ListItemDivider.First">
+
+            <TextView
+                android:id="@+id/tvNazivLabel" 
+                android:text="@string/ent_naseljeno_mesto_naziv"
+  				style="@style/TextViewLabel" />
+
+            <TextView
+                android:id="@+id/tvNaziv"
+                android:text="@string/ent_naseljeno_mesto_naziv" />
+        </TableRow>
+
+        <TableRow
+			style="@style/ListItemDivider">
+
+            <TextView
+                android:id="@+id/tvPostKodLabel" 
+                android:text="@string/ent_naseljeno_mesto_post_code"
+  				style="@style/TextViewLabel" />
+
+            <TextView
+                android:id="@+id/tvPostKod"
+                android:text="@string/ent_naseljeno_mesto_post_code" />
+        </TableRow>
+
+        <TableRow
+			style="@style/ListItemDivider">
+
+            <TextView
+                android:id="@+id/tvDrzavaLabel" 
+                android:text="@string/ent_naseljeno_mesto_drzava"
+  				style="@style/TextViewLabel" />
+
+            <TextView
+                android:id="@+id/tvDrzava"
+                android:text="@string/ent_naseljeno_mesto_drzava" />
+        </TableRow>
+        
+        <TableRow
+			style="@style/ListItemDivider">
+
+            <TextView
+                android:id="@+id/tvDrugaDrzavaLabel" 
+                android:text="@string/ent_naseljeno_mesto_druga_drzava"
+  				style="@style/TextViewLabel" />
+
+            <TextView
+                android:id="@+id/tvDrugaDrzava"
+                android:text="@string/ent_naseljeno_mesto_druga_drzava" />
+        </TableRow>
+    </TableLayout>

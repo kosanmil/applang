@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="action_settings">Settings</string>
+    
+    <!-- Titles -->
+    <string name="title_list">%1$s List</string>
+    <string name="title_new">New %1$s</string>
+    <string name="title_edit">Edit %1$s</string>
+    <string name="title_details">%1$s Details</string>
+    
+    <!-- Navigation Drawer strings -->
+    <string name="drawer_open">Open</string>
+	<string name="drawer_close">Close</string>
+	
+	<!-- Action strings -->
+	<string name="action_search">Search</string>
+	<string name="action_new">New</string>
+	<string name="action_add">Add</string>
+	<string name="action_edit">Edit</string>
+	<string name="action_delete">Delete</string>
+	<string name="action_details">Details</string>
+	<string name="action_call">Call</string>
+	<string name="action_message">Message</string>
+	
+	<string name="action_confirm">Confirm</string>
+	<string name="action_cancel">Cancel</string>
+	
+	<string name="yes">Yes</string>
+	<string name="no">No</string>
+	<string name="ok">OK</string>
+	<string name="none">None</string>
+	
+	<!-- Dialog questions -->
+	<string name="question_delete">"Are you sure you want to delete the %1s?"</string>
+	
+	<!-- Toast messages -->
+	<string name="toast_input_required_single">The input %1$s is required.</string>
+	<string name="toast_input_not_selected">"'%1$s' is not selected."</string>
+	<string name="toast_created">%1$s has been created.</string>
+	<string name="toast_edited">%1$s has been edited.</string>
+	<string name="toast_deleted">%1$s has been deleted.</string>
+	<string name="toast_not_found">%1$s not found.</string>
+	<string name="toast_device_cannot_call">The device cannot call telephone numbers.</string>
+	<string name="toast_device_cannot_message">The device cannot message telephone numbers.</string>
+	<string name="toast_device_cannot_open_map">The device cannot open the map.</string>
+	
+	<!-- Dialog titles -->
+	<string name="dialog_title_attention">Attention</string>
+	<string name="dialog_title_error">Error</string>
+	<string name="dialog_title_load_image">Load image</string>
+	
+	<!-- Dialog options -->
+	<string name="dialog_option_take_photo">Take photo</string>
+	<string name="dialog_option_choose_image">Choose image</string>
+	
+	<!-- Dialog messages -->
+	<string name="dialog_message_delete_failed_sql_constraint">Could not delete entity because another entity references it.</string>
+	<string name="dialog_message_db_error">An error has occurred while working with the database.</string>
+	
+	<!-- List strings -->
+	<string name="empty_list">No results found.</string>
+	
+	<!-- Spinner item texts -->
+	<string name="spinner_choose">&lt;&lt;Choose&gt;&gt;</string>
+	<string name="spinner_none">&lt;&lt;None&gt;&gt;</string>
+	
+	<!-- Button texts -->
+	<string name="btn_show">Show</string>
+	<string name="btn_add_image">Add image</string>
+	<string name="btn_change_image">Change image</string>
+	<string name="btn_clear_image">Clear image</string>
+	
+</resources>
