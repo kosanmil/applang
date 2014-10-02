@@ -1,0 +1,23 @@
+config {
+        app_name = novi_projekat;
+        namespace = master;
+        start_screen = FirstEntity;
+        platforms = android;
+        android_specs = {
+            sdk_path = "/home/kosan/software/android-sdk-linux";
+        }
+    }
+
+entity FirstEntity {
+    //First entity
+    name : int(required, unique, excludeFromList);
+    age : int(label="Age of the entity", toString);
+
+}
+
+entity SecondEntity ("Second Entity") {
+    //Second entity
+    attribute1 : SecondEntity;
+    attr2 : date(toString, label="Attribute quotes.", toString);
+
+}

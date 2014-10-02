@@ -8,7 +8,7 @@ from dsl.consts import PATH_APPCOMPAT_V7, PATH_GOOGLE_PLAY
 from dsl.utils import generate_from_template
 
 
-def generate_android(parser, debug=False, output_folder="../gen/", overwrite_all=True, eclipse_gen=True):
+def generate_android(model, debug=False, output_folder="../gen/", overwrite_all=True, eclipse_gen=True):
     """
     Generate the android application with the applang parser that contains the model.
     :param parser: The parser which was used to parse the applang language
@@ -19,13 +19,12 @@ def generate_android(parser, debug=False, output_folder="../gen/", overwrite_all
     print
     print("~~~~Generating the ANDROID application~~~~")
     print
-    config = parser.config
-    android_specs = config.android_specifics if config.android_specifics is not None else AndroidSpecifics()
+    config = model.config
+    android_specs = config.android_specs
     print("App name: {}".format(config.app_name))
     print("Namespace: {}".format(config.namespace))
-    print("Full Qname: {}".format(config.full_qname))
+    print("Full Qname: {}".format(config.qname))
     print("Min version: {}".format(android_specs.min_version))
-    print("Max version: {}".format(android_specs.max_version))
     print("Target version: {}".format(android_specs.target_version))
     if android_specs.sdk_path is None:
         print("WARNING: The Android SDK Path is not set! "
@@ -70,17 +69,17 @@ def generate_android(parser, debug=False, output_folder="../gen/", overwrite_all
     #Framework copying
     print
     print("Copying the app framework to the output folder: {}".format(output_folder))
-    copy_tree(src="../frameworks/android", dst=output_folder)
+    copy_tree(src="../../frameworks/android", dst=output_folder)
     print("Finished copying the app framework.")
     print
 
     #Files generation
-    environment = Environment(loader=FileSystemLoader('templates/android'))
+    environment = Environment(loader=FileSystemLoader('../templates/android'))
 
     #ToDo create query_yes_no for Eclipse
     if eclipse_gen:
         print("Generating the eclipse files")
-        copy_file(src="../frameworks/eclipse_files/.classpath", dst=output_folder)
+        copy_file(src="../../frameworks/eclipse_files/.classpath", dst=output_folder)
         generate_from_template(environment, "dot.project.tmpl", output_folder, ".project", overwrite_all,
                                config=config)
         print("Finished generating the eclipse files")
@@ -95,7 +94,7 @@ def generate_android(parser, debug=False, output_folder="../gen/", overwrite_all
     generate_from_template(environment, "strings_res.tmpl", output_folder + "res/values/", "strings.xml", overwrite_all,
                            config=config, android_specs=android_specs)
 
-    output_src_folder = output_folder + "src/" + config.full_qname.replace(".", "/") + "/"
+    output_src_folder = output_folder + "src/" + config.qname.replace(".", "/") + "/"
     if not os.path.exists(output_src_folder):
         os.makedirs(output_src_folder)
     generate_from_template(environment, "MainActivity.java.tmpl", output_src_folder, "MainActivity.java", overwrite_all,

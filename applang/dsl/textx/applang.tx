@@ -1,0 +1,124 @@
+/* Simple workflow language. */
+
+ApplangModel:
+    (
+        (config=Config)|
+        (entities*=Entity)
+    )+
+;
+
+Config:
+    'config' '{'
+        'app_name' '=' app_name=ID ';'
+        'namespace' '=' namespace=QNAME ';'
+        'start_screen' '=' start_screen=[Entity] ';'
+        'platforms' '=' platforms=Platforms ';'
+        (android_specs=AndroidSpecs)?
+
+    '}'
+;
+
+Platforms:
+    ((android?='android') | (ios?='ios') | (windows_phone?='windows_phone'))+[',']
+;
+
+AndroidSpecs:
+    'android_specs' '=' '{'
+        (   ('sdk_path' '=' sdk_path=STRING ';')
+            |('min_version' '=' min_version=INT ';')
+            |('target_version' '=' target_version=INT ';')
+        )*
+    '}'
+;
+
+Entity:
+    'entity' name=FIRST_UPPER_ID
+    ('('label=STRING')')?
+    '{'
+        attributes+=Attribute
+    '}'
+;
+
+Attribute:
+    name=ID ':' ((primitive_type=PrimitiveType)|(reference_type=[Entity]))
+    //Descriptors
+    (
+    '('
+         ( (required?='required')
+           |(unique?='unique')
+           |(transient?='transient')
+           |(exclude_from_list?='excludeFromList')
+           |(to_string?='toString')
+           |('label' '=' label=STRING)
+         )*[',']
+    ')'
+    )?
+    ';'
+;
+
+PrimitiveType:
+    INT_TYPE|STRING_TYPE|FLOAT_TYPE|BOOL_TYPE|DATE_TYPE|IMAGE_TYPE
+;
+
+
+INT_TYPE:
+    name='int'
+;
+
+STRING_TYPE:
+    name='string'
+;
+
+FLOAT_TYPE:
+    name='float'
+;
+
+BOOL_TYPE:
+    name='bool'
+;
+
+DATE_TYPE:
+    name='date'
+;
+
+IMAGE_TYPE:
+    name='image'
+;
+
+/*
+Workflow:
+
+  'workflow' name=ID (desc=STRING)?
+  'init' init=[Task]
+
+  tasks *= Task
+
+  actions *= Action
+
+;
+
+Task:
+  'task' name=ID '{'
+    (('entry' entry=[Action])|
+    ('leave' leave=[Action])|
+    ('next' next+=[Task][',']))*
+  '}'
+;
+
+Action:
+  'action' name=ID
+;
+*/
+
+QNAME:
+    /([a-zA-Z_][a-zA-Z\d_]*\.)*[a-zA-Z_][a-zA-Z\d_]*/
+;
+
+FIRST_UPPER_ID:
+    /([A-Z])([a-z]|[A-Z]|_|[0-9])*/
+;
+
+Comment:
+  /\/\/.*$/
+;
+
