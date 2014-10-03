@@ -1,23 +1,40 @@
 config {
-        app_name = novi_projekat;
+        app_name = MasterGenerated;
+        app_label = "Master Generated";
         namespace = master;
-        start_screen = FirstEntity;
+        start_screen = Drzava;
         platforms = android;
         android_specs = {
             sdk_path = "/home/kosan/software/android-sdk-linux";
         }
     }
 
-entity FirstEntity {
+entity Drzava {
     //First entity
-    name : int(required, unique, excludeFromList);
-    age : int(label="Age of the entity", toString);
+    sifra("Šifra") : string(required, unique);
+    naziv : string(required, unique);
+    zastava : image;
 
 }
 
-entity SecondEntity ("Second Entity") {
+entity NaseljenoMesto ("Naseljeno Mesto") {
     //Second entity
-    attribute1 : SecondEntity;
-    attr2 : date(toString, label="Attribute quotes.", toString);
+    naziv : string(required, unique);
+    postCode ("Postanski kod") : numeric_string(required, unique);
+    drzava : Drzava(required);
+    drugaDrzava : Drzava;
+
+}
+
+entity Firma {
+    naziv : string (required);
+    pib ("PIB") : numeric_string (required, unique);
+    domaca : bool;
+    naseljenoMesto : NaseljenoMesto (required);
+    opis : textarea_string;
+    nadFirma : Firma;
+    telefon : telephone_type;
+    datumOsnivanja  : date;
+    adresa : address_type;
 
 }

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<resources>
+    
+    <string-array name="nav_drawer_labels">
+        <item>Country</item>
+        <item>Town</item>
+        <item>Firm</item>
+    </string-array>
+    
+    <string-array name="nav_drawer_tags">
+        <item>ftn.masterproba.impl.fragments.DrzavaListFragmentImpl</item>
+        <item>ftn.masterproba.impl.fragments.NaseljenoMestoListFragmentImpl</item>
+        <item>ftn.masterproba.impl.fragments.FirmaListFragmentImpl</item>
+    </string-array>
+    
+    
+ 
+
+</resources>

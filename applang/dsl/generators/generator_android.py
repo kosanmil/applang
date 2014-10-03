@@ -3,9 +3,8 @@ import os
 from distutils.dir_util import copy_tree
 from distutils.file_util import copy_file
 from dsl.applang_exceptions import GeneratorException
-from dsl.applang_model import *
 from dsl.consts import PATH_APPCOMPAT_V7, PATH_GOOGLE_PLAY
-from dsl.utils import generate_from_template
+from dsl.utils import generate_from_template, camel_to_under
 
 
 def generate_android(model, debug=False, output_folder="../gen/", overwrite_all=True, eclipse_gen=True):
@@ -39,7 +38,7 @@ def generate_android(model, debug=False, output_folder="../gen/", overwrite_all=
         print("Folder for storing generated android applications does not exist. It will be created: {}"
               .format(android_gen_folder))
         os.makedirs(android_gen_folder)
-    output_folder = android_gen_folder + config.namespace + "." + config.app_name + "/"
+    output_folder = android_gen_folder + config.qname + "/"
     if not os.path.exists(output_folder):
         print("Folder for storing the generated android application does not exist. It will be created: {}"
               .format(android_gen_folder))
@@ -65,7 +64,6 @@ def generate_android(model, debug=False, output_folder="../gen/", overwrite_all=
                   dst=android_gen_folder + "google-play-services_lib/")
 
 
-
     #Framework copying
     print
     print("Copying the app framework to the output folder: {}".format(output_folder))
@@ -73,8 +71,9 @@ def generate_android(model, debug=False, output_folder="../gen/", overwrite_all=
     print("Finished copying the app framework.")
     print
 
-    #Files generation
+    #File generation
     environment = Environment(loader=FileSystemLoader('../templates/android'))
+    environment.filters['cameltounder'] = camel_to_under
 
     #ToDo create query_yes_no for Eclipse
     if eclipse_gen:
@@ -84,15 +83,18 @@ def generate_android(model, debug=False, output_folder="../gen/", overwrite_all=
                                config=config)
         print("Finished generating the eclipse files")
 
-    #AndroidManifest.xml generation
-    generate_from_template(environment, "manifest.tmpl", output_folder, "AndroidManifest.xml", overwrite_all,
+    # AndroidManifest.xml generation
+    generate_from_template(environment, "AndroidManifest.tmpl", output_folder, "AndroidManifest.xml", overwrite_all,
                            config=config, android_specs=android_specs)
-    #project.properties generation
+    # project.properties generation
     generate_from_template(environment, "project.properties.tmpl", output_folder, "project.properties", overwrite_all,
                            config=config, android_specs=android_specs)
-    #string.xml generation
-    generate_from_template(environment, "strings_res.tmpl", output_folder + "res/values/", "strings.xml", overwrite_all,
-                           config=config, android_specs=android_specs)
+    # gen_string_entities.xml generation
+    generate_from_template(environment, "gen_strings_entities.xml.tmpl", output_folder + "res/values/", "gen_strings_entities.xml", overwrite_all,
+                           app_label=config.app_label, entities=model.entities)
+    # string.xml generation
+    # generate_from_template(environment, "strings_res.tmpl", output_folder + "res/values/", "strings.xml", overwrite_all,
+    #                        config=config, android_specs=android_specs)
 
     output_src_folder = output_folder + "src/" + config.qname.replace(".", "/") + "/"
     if not os.path.exists(output_src_folder):

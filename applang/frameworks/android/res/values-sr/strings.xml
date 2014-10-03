@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="action_settings">Podešavanja</string>
+    
+    <!-- Titles -->
+    <string name="title_list">%1$s - lista</string>
+    <string name="title_new">%1$s - novo</string>
+    <string name="title_edit">%1$s - izmena</string>
+    <string name="title_details">%1$s - detalji</string>
+    
+    <!-- Navigation Drawer strings -->
+    <string name="drawer_open">Otvoreno</string>
+	<string name="drawer_close">Zatvoreno</string>
+	
+	<!-- Action strings -->
+	<string name="action_search">Pretraga</string>
+	<string name="action_new">Novo</string>
+	<string name="action_add">Dodaj</string>
+	<string name="action_edit">Izmeni</string>
+	<string name="action_delete">Izbriši</string>
+	<string name="action_details">Detalji</string>
+	<string name="action_call">Pozovi</string>
+	<string name="action_message">Poruka</string>
+	
+	<string name="action_confirm">Potvrdi</string>
+	<string name="action_cancel">Otkaži</string>
+	
+	<string name="yes">Da</string>
+	<string name="no">Ne</string>
+	<string name="ok">U redu</string>
+	<string name="none">Nema</string>
+	
+	<!-- Dialog questions -->
+	<string name="question_delete">"Da li ste sigurni da želite da izbrišete '%1s'?"</string>
+	
+		
+	<!-- Toast messages -->
+	<string name="toast_input_required_single">Polje %1$s je obavezno.</string>
+	<string name="toast_input_not_selected">"'%1$s' nije izabrana."</string>
+	<string name="toast_created">%1$s je napravljeno.</string>
+	<string name="toast_edited">%1$s je izmenjeno.</string>
+	<string name="toast_deleted">%1$s je izbrisano.</string>
+	<string name="toast_not_found">%1$s nije pronađeno.</string>
+	<string name="toast_device_cannot_call">Uređaj ne može da zove telefonske brojeve.</string>
+	<string name="toast_device_cannot_message">Uređaj ne može da šalje poruke telefonskim brojevima.</string>
+	<string name="toast_device_cannot_open_map">Uređaj ne može da otvori mape.</string>
+	
+	<!-- Dialog titles -->
+	<string name="dialog_title_attention">Obaveštenje</string>
+	<string name="dialog_title_error">Greška</string>
+	<string name="dialog_title_load_image">Učitaj sliku</string>
+	
+	<!-- Dialog options -->
+	<string name="dialog_option_take_photo">Fotografiši</string>
+	<string name="dialog_option_choose_image">Izaberi sliku</string>
+	
+	<!-- Dialog messages -->
+	<string name="dialog_message_delete_failed_sql_constraint">Ne može se izbrisati entitet jer je referenciran u drugom entitetu.</string>
+	<string name="dialog_message_db_error">Desila se greška prilikom rada sa bazom podataka.</string>
+	<!-- List strings -->
+	<string name="empty_list">Nije pronađen nijedan rezultat.</string>
+	
+	<!-- Spinner item texts -->
+	<string name="spinner_choose">&lt;&lt;Izaberi&gt;&gt;</string>
+	<string name="spinner_none">&lt;&lt;Nema&gt;&gt;</string>
+	
+	<!-- Button texts -->
+	<string name="btn_show">Prikaži</string>
+	<string name="btn_add_image">Dpdaj sliku</string>
+	<string name="btn_change_image">Promeni sliku</string>
+	<string name="btn_clear_image">Skloni sliku</string>
+	
+</resources>

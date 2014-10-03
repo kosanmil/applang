@@ -23,17 +23,17 @@ def generate_apps_from_textx_file(file_path, metamodel_file_path, debug=False, o
         try:
             generate_android(model, debug, output_folder, overwrite_all, eclipse_gen)
         except UnimplementedPlatformException as e:
-            print("WARNING: Android generation is not implemented!");
+            print("WARNING: Android generation is not implemented!")
     if platforms.ios:
         try:
             generate_ios(model, debug, output_folder, overwrite_all)
         except UnimplementedPlatformException as e:
-            print("WARNING: iOS generation is not implemented!");
+            print("WARNING: iOS generation is not implemented!")
     if platforms.windows_phone:
         try:
             generate_wp(model, debug, output_folder, overwrite_all)
         except UnimplementedPlatformException as e:
-            print("WARNING: Windows Phone generation is not implemented!");
+            print("WARNING: Windows Phone generation is not implemented!")
     print("Finished generating applications for the following platforms: {}".format(platforms))
 
 if __name__ == "__main__":

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="image_view_size_details">128dp</dimen>
+    <dimen name="image_view_size_list">90dp</dimen>
+    <dimen name="image_view_size_input">64dp</dimen>
+    
+    <dimen name="list_item_divider">10dp</dimen>
+    <dimen name="details_item_divider">10dp</dimen>
+</resources>

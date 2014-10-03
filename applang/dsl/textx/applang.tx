@@ -10,6 +10,7 @@ ApplangModel:
 Config:
     'config' '{'
         'app_name' '=' app_name=ID ';'
+        ('app_label' '=' app_label=STRING ';')?
         'namespace' '=' namespace=QNAME ';'
         'start_screen' '=' start_screen=[Entity] ';'
         'platforms' '=' platforms=Platforms ';'
@@ -40,7 +41,8 @@ Entity:
 ;
 
 Attribute:
-    name=ID ':' ((primitive_type=PrimitiveType)|(reference_type=[Entity]))
+    name=ID ('('label=STRING')')?
+    ':' ((primitive_type=PrimitiveType)|(reference_type=[Entity]))
     //Descriptors
     (
     '('
@@ -49,7 +51,6 @@ Attribute:
            |(transient?='transient')
            |(exclude_from_list?='excludeFromList')
            |(to_string?='toString')
-           |('label' '=' label=STRING)
          )*[',']
     ')'
     )?
@@ -57,7 +58,7 @@ Attribute:
 ;
 
 PrimitiveType:
-    INT_TYPE|STRING_TYPE|FLOAT_TYPE|BOOL_TYPE|DATE_TYPE|IMAGE_TYPE
+    INT_TYPE|STRING_TYPE|NUMERIC_STRING_TYPE|TEXTAREA_STRING_TYPE|FLOAT_TYPE|BOOL_TYPE|DATE_TYPE|IMAGE_TYPE|TELEPHONE_TYPE|ADDRESS_TYPE
 ;
 
 
@@ -67,6 +68,14 @@ INT_TYPE:
 
 STRING_TYPE:
     name='string'
+;
+
+NUMERIC_STRING_TYPE:
+    name='numeric_string'
+;
+
+TEXTAREA_STRING_TYPE:
+    name='textarea_string'
 ;
 
 FLOAT_TYPE:
@@ -83,6 +92,14 @@ DATE_TYPE:
 
 IMAGE_TYPE:
     name='image'
+;
+
+TELEPHONE_TYPE:
+    name='telephone_type'
+;
+
+ADDRESS_TYPE:
+    name='address_type'
 ;
 
 /*
@@ -111,7 +128,7 @@ Action:
 */
 
 QNAME:
-    /([a-zA-Z_][a-zA-Z\d_]*\.)*[a-zA-Z_][a-zA-Z\d_]*/
+    /([a-z_][a-z\d_]*\.)*[a-z_][a-z\d_]*/
 ;
 
 FIRST_UPPER_ID:

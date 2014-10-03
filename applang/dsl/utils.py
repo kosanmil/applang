@@ -1,5 +1,16 @@
 import sys
 import os
+import re
+
+
+#Template filters
+def camel_to_under(name):
+    """
+    Converts CamelCase to underscore with lowercase. Example: CamelCase -> camel_case
+    """
+    s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
+    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
+#Template filters end
 
 
 def generate_from_template(template_env, template_name,
