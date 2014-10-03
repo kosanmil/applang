@@ -74,6 +74,8 @@ def generate_android(model, debug=False, output_folder="../gen/", overwrite_all=
     #File generation
     environment = Environment(loader=FileSystemLoader('../templates/android'))
     environment.filters['cameltounder'] = camel_to_under
+    environment.trim_blocks = True
+    environment.lstrip_blocks = True
 
     #ToDo create query_yes_no for Eclipse
     if eclipse_gen:
@@ -104,5 +106,3 @@ def generate_android(model, debug=False, output_folder="../gen/", overwrite_all=
     print
     print("Finished generating the ANDROID application")
     print
-
-

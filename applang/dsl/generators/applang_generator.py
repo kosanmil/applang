@@ -38,7 +38,8 @@ def generate_apps_from_textx_file(file_path, metamodel_file_path, debug=False, o
 
 if __name__ == "__main__":
     #generate_apps_from_file("example.alang", overwrite_all=True, eclipse_gen=True)
-    generate_apps_from_textx_file("../textx/example_textx.alang", "../textx/applang.tx", overwrite_all=True, eclipse_gen=True)
+    generate_apps_from_textx_file("../textx/example_textx.alang", "../textx/applang.tx", overwrite_all=True,
+                                  eclipse_gen=True)
 
 
 # def generate_apps_from_file(file_path, debug=False, output_folder="../gen/", overwrite_all=True, eclipse_gen=True):

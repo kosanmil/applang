@@ -1,6 +1,7 @@
 import sys
 import os
 import re
+import codecs
 
 
 #Template filters
@@ -34,7 +35,7 @@ def generate_from_template(template_env, template_name,
             #Stopping the file generation
             return
     print("Generating {}".format(output_file_name))
-    manifest_file = open(output_file_path, "w+")
+    manifest_file = codecs.open(output_file_path, "w+", encoding="utf-8")
     manifest_file.write(template_env.get_template(template_name)
                        .render(kwargs))
     manifest_file.close()
