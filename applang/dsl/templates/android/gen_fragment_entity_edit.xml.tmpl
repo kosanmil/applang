@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+{{xml_gen_comment}}
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+	style="@style/LayoutScrollView" >
+
+    <TableLayout
+		style="@style/Layout.MarginsLeftRightBottom"
+        android:shrinkColumns="1" >
+        {% for attr in entity.attributes %}
+        <TableRow>
+            <TextView
+                android:id="@+id/tv_{{attr.name|cameltounder}}_label"
+                android:text="@string/ent_{{entity.name|cameltounder}}_{{attr.name|cameltounder}}"
+       			style="@style/TextViewLabel" />
+            {% if attr.reference_type %}
+            <Spinner android:id="@+id/sp_{{attr.name|cameltounder}}"
+	            style="@style/Input"/>
+	        {% elif attr.primitive_type == 'bool' %}
+	        <CheckBox
+	            android:id="@+id/cb_{{attr.name|cameltounder}}" />
+	        {% elif attr.primitive_type == 'date' %}
+	        <DatePicker
+                android:id="@+id/dp_{{attr.name|cameltounder}}"
+                android:calendarViewShown="false" />
+            {% elif attr.primitive_type == 'textarea_string' %}
+            <EditText
+	            android:id="@+id/et_{{attr.name|cameltounder}}"
+	            android:hint="@string/ent_{{entity.name|cameltounder}}_{{attr.name|cameltounder}}"
+	            style="@style/Input.TextArea" />
+	        {% elif attr.primitive_type == 'numeric_string' or attr.primitive_type == 'int' %}
+            <EditText
+	            android:id="@+id/et_{{attr.name|cameltounder}}"
+	            android:hint="@string/ent_{{entity.name|cameltounder}}_{{attr.name|cameltounder}}"
+	            android:inputType="number"
+	            style="@style/Input.EditText" />
+	        {% elif attr.primitive_type == 'float' %}
+            <EditText
+	            android:id="@+id/et_{{attr.name|cameltounder}}"
+	            android:hint="@string/ent_{{entity.name|cameltounder}}_{{attr.name|cameltounder}}"
+	            android:inputType="numberDecimal"
+	            style="@style/Input.EditText" />
+	        {% elif attr.primitive_type == 'telephone_type' %}
+            <EditText
+	            android:id="@+id/et_{{attr.name|cameltounder}}"
+	            android:hint="@string/ent_{{entity.name|cameltounder}}_{{attr.name|cameltounder}}"
+	            android:inputType="phone"
+	            style="@style/Input.EditText" />
+	        {% elif attr.primitive_type == 'address_string' %}
+            <EditText
+	            android:id="@+id/et_{{attr.name|cameltounder}}"
+	            android:hint="@string/ent_{{entity.name|cameltounder}}_{{attr.name|cameltounder}}"
+	            android:inputType="textCapWords"
+	            style="@style/Input.EditText" />
+	        {% elif attr.primitive_type == 'image' %}
+	        <Button
+                android:id="@+id/btn_{{attr.name|cameltounder}}"
+                android:layout_width="wrap_content"
+                android:layout_gravity="start"
+                android:text="@string/btn_change_image" />
+
+            <Button
+                android:id="@+id/btn_{{attr.name|cameltounder}}_Dismiss"
+                android:layout_width="wrap_content"
+                android:text="@string/btn_clear_image" />
+
+            <ImageView
+                android:id="@+id/iv_{{attr.name|cameltounder}}"
+                android:contentDescription="@string/ent_{{entity.name|cameltounder}}_{{attr.name|cameltounder}}"
+                style="@style/ImageViewInput" />
+	        {% else %}
+            <EditText
+	            android:id="@+id/et_{{attr.name|cameltounder}}"
+	            android:hint="@string/ent_{{entity.name|cameltounder}}_{{attr.name|cameltounder}}"
+	            android:inputType="textCapSentences"
+	            style="@style/Input.EditText" />
+            {% endif %}
+        </TableRow>
+        {% endfor %}
+    </TableLayout>
+
+</ScrollView>

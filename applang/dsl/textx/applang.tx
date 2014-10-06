@@ -12,6 +12,7 @@ Config:
         'app_name' '=' app_name=ID ';'
         ('app_label' '=' app_label=STRING ';')?
         'namespace' '=' namespace=QNAME ';'
+        'db_version' '=' db_version=INT ';'
         'start_screen' '=' start_screen=[Entity] ';'
         'platforms' '=' platforms=Platforms ';'
         (android_specs=AndroidSpecs)?
@@ -51,6 +52,9 @@ Attribute:
            |(transient?='transient')
            |(exclude_from_list?='excludeFromList')
            |(to_string?='toString')
+           |(readonly?='readonly')
+           |(searchable?='searchable')
+           |(view_from_container?='viewFromContainer')
          )*[',']
     ')'
     )?
@@ -58,10 +62,10 @@ Attribute:
 ;
 
 PrimitiveType:
-    INT_TYPE|STRING_TYPE|NUMERIC_STRING_TYPE|TEXTAREA_STRING_TYPE|FLOAT_TYPE|BOOL_TYPE|DATE_TYPE|IMAGE_TYPE|TELEPHONE_TYPE|ADDRESS_TYPE
+    'int'|'string'|'numeric_string'|'textarea_string'|'float'|'bool'|'date'|'image'|'telephone_type'|'address_type'
 ;
 
-
+/*
 INT_TYPE:
     name='int'
 ;
@@ -101,6 +105,7 @@ TELEPHONE_TYPE:
 ADDRESS_TYPE:
     name='address_type'
 ;
+*/
 
 /*
 Workflow:

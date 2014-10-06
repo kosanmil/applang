@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+{{xml_gen_comment}}
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/LayoutScrollView" >
+
+    <LinearLayout
+        style="@style/Layout.MarginsLeftRightBottom.MarginTop"
+        android:orientation="vertical" >
+
+        <TableLayout
+            style="@style/Layout"
+            android:shrinkColumns="1" >
+            {% for attr in entity.attributes %}
+            <TableRow
+                style="@style/DetailsItemDivider" >
+                <TextView
+                    android:id="@+id/tv_{{attr.name|cameltounder}}_label"
+                    style="@style/TextViewLabel"
+                    android:text="@string/ent_{{entity.name|cameltounder}}_{{attr.name|cameltounder}}"/>
+                {% if not attr.primitive_type == 'image' %}
+                <TextView
+                    android:id="@+id/tv_{{attr.name|cameltounder}}"
+                    {# android:text="@string/ent_{{entity.name|cameltounder}}_{{attr.name|cameltounder}}" #}
+                    {% if (attr.primitive_type == 'telephone_type' or attr.primitive_type == 'address_type' ) %}
+                    android:layout_gravity="center_vertical"
+                    {% endif %}
+                    />
+                {% else %}
+                <ImageView
+                    android:id="@+id/iv_{{attr.name|cameltounder}}"
+                    android:contentDescription="@string/ent_{{entity.name|cameltounder}}_{{attr.name|cameltounder}}"
+                    style="@style/ImageViewDetails" />
+                {% endif %}
+                {% if attr.primitive_type == 'telephone_type' %}
+                <ImageButton
+                    android:id="@+id/btn_{{attr.name|cameltounder}}_call"
+                    android:layout_marginRight="10dp"
+                    android:contentDescription="@string/action_call"
+                    android:src="@drawable/ic_action_call_dark" />
+
+                <ImageButton
+                    android:id="@+id/btn_{{attr.name|cameltounder}}_message"
+                    android:contentDescription="@string/action_message"
+                    android:src="@drawable/ic_action_email" />
+                {% elif attr.primitive_type == 'address_type' %}
+                <ImageButton
+                   android:id="@+id/btn_{{attr.name|cameltounder}}_map"
+                    android:layout_marginRight="10dp"
+                    android:contentDescription="@string/ent_{{entity.name|cameltounder}}_{{attr.name|cameltounder}}"
+                    android:src="@drawable/ic_action_place" />
+                {% endif %}
+            </TableRow>
+            {% endfor %}
+        </TableLayout>
+        {% for attr in entity.attributes %}
+        {% if loop.first %}
+        <TableLayout
+            style="@style/Layout"
+            android:shrinkColumns="0" >
+        {% endif %}
+            <TableRow
+                style="@style/DetailsItemDivider" >
+                <TextView
+                    android:id="@+id/tv_{{attr.reference_type.name|cameltounder}}_{{attr.name|cameltounder}}_label"
+                    style="@style/TextViewLabel"
+                    android:text="@string/ent_in_{{attr.reference_type.name|cameltounder}}_as_{{attr.name|cameltounder}}" />
+
+                <Button
+                    android:id="@+id/btn_{{attr.reference_type.name|cameltounder}}_{{attr.name|cameltounder}}"
+                    android:layout_weight="1"
+                    android:text="@string/btn_show" />
+            </TableRow>
+        {% if loop.last %}
+        </TableLayout>
+        {% endif %}
+        {% endfor %}
+    </LinearLayout>
+
+</ScrollView>

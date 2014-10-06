@@ -2,6 +2,7 @@ config {
         app_name = MasterGenerated;
         app_label = "Master Generated";
         namespace = master;
+        db_version = 1;
         start_screen = Drzava;
         platforms = android;
         android_specs = {
@@ -9,32 +10,32 @@ config {
         }
     }
 
-entity Drzava {
+entity Drzava ("Država") {
     //First entity
-    sifra("Šifra") : string(required, unique);
-    naziv : string(required, unique);
+    sifra("Šifra") : string(required, unique, searchable);
+    naziv : string(required, unique, searchable);
     zastava : image;
 
 }
 
 entity NaseljenoMesto ("Naseljeno Mesto") {
     //Second entity
-    naziv : string(required, unique);
-    postCode ("Postanski kod") : numeric_string(required, unique);
-    drzava : Drzava(required);
-    drugaDrzava : Drzava;
+    naziv : string(required, unique, searchable);
+    postCode ("Poštanski kod") : numeric_string(required, unique);
+    drzava ("Država") : Drzava(required, searchable, viewFromContainer);
+    drugaDrzava ("Druga država") : Drzava (viewFromContainer);
 
 }
 
 entity Firma {
-    naziv : string (required);
+    naziv : string (required, searchable);
     pib ("PIB") : numeric_string (required, unique);
-    domaca : bool;
-    naseljenoMesto : NaseljenoMesto (required);
-    opis : textarea_string;
-    nadFirma : Firma;
-    telefon : telephone_type;
-    datumOsnivanja  : date;
-    adresa : address_type;
+    domaca ("Domaća") : bool;
+    naseljenoMesto : NaseljenoMesto (required, searchable, viewFromContainer);
+    opis : textarea_string (excludeFromList);
+    nadFirma : Firma (viewFromContainer);
+    telefon : telephone_type (excludeFromList);
+    datumOsnivanja  : date (excludeFromList);
+    adresa : address_type (excludeFromList);
 
 }

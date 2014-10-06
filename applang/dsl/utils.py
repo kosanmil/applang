@@ -5,12 +5,16 @@ import codecs
 
 
 #Template filters
+first_cap_re = re.compile('(.)([A-Z][a-z]+)')
+all_cap_re = re.compile('([a-z0-9])([A-Z])')
+
+
 def camel_to_under(name):
     """
     Converts CamelCase to underscore with lowercase. Example: CamelCase -> camel_case
     """
-    s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
-    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
+    s1 = first_cap_re.sub(r'\1_\2', name)
+    return all_cap_re.sub(r'\1_\2', s1).lower()
 #Template filters end
 
 
@@ -73,3 +77,14 @@ def query_yes_no(question, default="yes"):
         else:
             sys.stdout.write("Please respond with 'yes' or 'no' "
                              "(or 'y' or 'n').\n")
+
+
+XML_GEN_COMMENT = """<!--
+   This file has been generated using the AppLang mobile application language.
+   DO NOT MODIFY IT! Any changes will be overridden!
+-->"""
+
+JAVA_GEN_COMMENT = """/*
+   This file has been generated using the AppLang mobile application language.
+   DO NOT MODIFY IT! Any changes will be overridden!
+*/"""

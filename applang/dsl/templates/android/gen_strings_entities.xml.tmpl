@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+{{xml_gen_comment}}
 <resources>
 
     <string name="app_name">{{app_label}}</string>
@@ -6,14 +7,10 @@
     <!-- {{entity.label}} -->
     {% for attribute in entity.attributes %}
     <string name="ent_{{entity.name|cameltounder}}_{{attribute.name|cameltounder}}">{{attribute.label}}</string>
+    {% if attribute.view_from_container %}
+   	<string name="ent_in_{{entity.name|cameltounder}}_as_{{attribute.name|cameltounder}}">"In '{{entity.label}}' as '{{attribute.label}}'"</string>
+   	{% endif %}
     {% endfor %}
     {% endfor %}
-
-
-   	<!-- Details 'In As' labels -->
-   	<string name="ent_in_naseljeno_mesto_as_drzava">"In 'Town' as 'Country'"</string>
-   	<string name="ent_in_naseljeno_mesto_as_druga_drzava">"In 'Town' as 'Other Country'"</string>
-   	<string name="ent_in_firma_as_naseljeno_mesto">"In 'Firm' as 'Town'"</string>
-   	<string name="ent_in_firma_as_nadfirma">"In 'Firm' as 'Supfirm'"</string>
 
 </resources>

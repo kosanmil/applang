@@ -4,7 +4,8 @@ from distutils.dir_util import copy_tree
 from distutils.file_util import copy_file
 from dsl.applang_exceptions import GeneratorException
 from dsl.consts import PATH_APPCOMPAT_V7, PATH_GOOGLE_PLAY
-from dsl.utils import generate_from_template, camel_to_under
+from dsl.utils import generate_from_template, camel_to_under, XML_GEN_COMMENT, JAVA_GEN_COMMENT
+from dsl.textx.semantics import TYPE_TEXT_IN_DB, TYPE_INT_IN_DB, TYPE_REAL_IN_DB
 
 
 def generate_android(model, debug=False, output_folder="../gen/", overwrite_all=True, eclipse_gen=True):
@@ -76,8 +77,10 @@ def generate_android(model, debug=False, output_folder="../gen/", overwrite_all=
     environment.filters['cameltounder'] = camel_to_under
     environment.trim_blocks = True
     environment.lstrip_blocks = True
+    environment.globals['xml_gen_comment'] = XML_GEN_COMMENT
+    environment.globals['java_gen_comment'] = JAVA_GEN_COMMENT
 
-    #ToDo create query_yes_no for Eclipse
+    #TODO create query_yes_no for Eclipse
     if eclipse_gen:
         print("Generating the eclipse files")
         copy_file(src="../../frameworks/eclipse_files/.classpath", dst=output_folder)
@@ -90,19 +93,77 @@ def generate_android(model, debug=False, output_folder="../gen/", overwrite_all=
                            config=config, android_specs=android_specs)
     # project.properties generation
     generate_from_template(environment, "project.properties.tmpl", output_folder, "project.properties", overwrite_all,
-                           config=config, android_specs=android_specs)
+                           android_specs=android_specs)
     # gen_string_entities.xml generation
-    generate_from_template(environment, "gen_strings_entities.xml.tmpl", output_folder + "res/values/", "gen_strings_entities.xml", overwrite_all,
+    generate_from_template(environment, "gen_strings_entities.xml.tmpl", output_folder + "res/values/",
+                           "gen_strings_entities.xml", overwrite_all,
                            app_label=config.app_label, entities=model.entities)
-    # string.xml generation
-    # generate_from_template(environment, "strings_res.tmpl", output_folder + "res/values/", "strings.xml", overwrite_all,
-    #                        config=config, android_specs=android_specs)
+    # gen_arrays.xml generation
+    generate_from_template(environment, "gen_arrays.xml.tmpl", output_folder + "res/values/",
+                           "gen_arrays.xml", overwrite_all,
+                           config=config, entities=model.entities)
 
     output_src_folder = output_folder + "src/" + config.qname.replace(".", "/") + "/"
     if not os.path.exists(output_src_folder):
         os.makedirs(output_src_folder)
+
     generate_from_template(environment, "MainActivity.java.tmpl", output_src_folder, "MainActivity.java", overwrite_all,
                            config=config)
+
+    # src gen folder creation
+    output_src_gen_folder = output_folder + "src-gen/" + config.qname.replace(".", "/") + "/"
+    if not os.path.exists(output_src_gen_folder):
+        os.makedirs(output_src_gen_folder)
+    # databases folder creation
+    output_src_gen_databases_folder = output_src_gen_folder + "databases" + "/"
+    if not os.path.exists(output_src_gen_databases_folder):
+        os.makedirs(output_src_gen_databases_folder)
+    # content_providers folder creation
+    output_src_gen_content_providers_folder = output_src_gen_folder + "content_providers" + "/"
+    if not os.path.exists(output_src_gen_content_providers_folder):
+        os.makedirs(output_src_gen_content_providers_folder)
+    # adapters folder creation
+    output_src_gen_adapters_folder = output_src_gen_folder + "adapters" + "/"
+    if not os.path.exists(output_src_gen_adapters_folder):
+        os.makedirs(output_src_gen_adapters_folder)
+    # fragments folder creation
+    output_src_gen_fragments_folder = output_src_gen_folder + "fragments" + "/"
+    if not os.path.exists(output_src_gen_fragments_folder):
+        os.makedirs(output_src_gen_fragments_folder)
+
+    # DatabaseOpenHelper.java
+    generate_from_template(environment, "DatabaseOpenHelper.java.tmpl", output_src_gen_databases_folder,
+                           "DatabaseOpenHelper.java", overwrite_all,
+                           config=config, entities=model.entities)
+    for entity in model.entities:
+        # Used for import statements in the code.
+        ref_entity_names = {attr.reference_type.name for attr in entity.attributes if attr.reference_type}
+        # {{Entity}}Table.java
+        generate_from_template(environment, "EntityTable.java.tmpl", output_src_gen_databases_folder,
+                           "{}Table.java".format(entity.name), overwrite_all,
+                           config=config, entity=entity, TYPE_TEXT_IN_DB=TYPE_TEXT_IN_DB,
+                           TYPE_INT_IN_DB=TYPE_INT_IN_DB, TYPE_REAL_IN_DB=TYPE_REAL_IN_DB)
+        #{{Entity}}ContentProvider.java
+        generate_from_template(environment, "EntityContentProvider.java.tmpl", output_src_gen_content_providers_folder,
+                           "{}ContentProvider.java".format(entity.name), overwrite_all,
+                           config=config, entity=entity, ref_entity_names=ref_entity_names)
+        #{{Entity}}ListFragment.java
+        generate_from_template(environment, "EntityListFragment.java.tmpl", output_src_gen_fragments_folder,
+                           "{}ListFragment.java".format(entity.name), overwrite_all,
+                           config=config, entity=entity, ref_entity_names=ref_entity_names)
+        generate_from_template(environment, "gen_list_item_entity.xml.tmpl", output_folder + "res/layout/",
+                           "gen_list_item_{}.xml".format(camel_to_under(entity.name)), overwrite_all,
+                           entity=entity)
+        generate_from_template(environment, "gen_fragment_entity_details.xml.tmpl", output_folder + "res/layout/",
+                           "gen_fragment_{}_details.xml".format(camel_to_under(entity.name)), overwrite_all,
+                           entity=entity)
+        generate_from_template(environment, "gen_fragment_entity_new.xml.tmpl", output_folder + "res/layout/",
+                           "gen_fragment_{}_new.xml".format(camel_to_under(entity.name)), overwrite_all,
+                           entity=entity)
+        generate_from_template(environment, "gen_fragment_entity_edit.xml.tmpl", output_folder + "res/layout/",
+                           "gen_fragment_{}_edit.xml".format(camel_to_under(entity.name)), overwrite_all,
+                           entity=entity)
+
     print
     print("Finished generating the ANDROID application")
     print

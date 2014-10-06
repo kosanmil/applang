@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+{{xml_gen_comment}}
+<resources>
+    
+    <string-array name="nav_drawer_labels">
+    {% for entity in entities %}
+        <item>{{entity.label}}</item>
+    {% endfor %}
+    </string-array>
+    
+    <string-array name="nav_drawer_tags">
+    {% for entity in entities %}
+        <item>{{config.qname}}.impl.fragments.{{entity.name}}ListFragmentImpl</item>
+    {% endfor %}
+    </string-array>
+
+</resources>

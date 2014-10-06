@@ -1,5 +1,5 @@
 #######################################################################
-# Name: applang_generator.py
+# Name: generator.py
 # Purpose: Textual DSL for generating mobile applications
 # Author: Milan Kosanovic <kosanmil AT gmail DOT com>
 #
@@ -11,7 +11,7 @@ from dsl.applang_parser import parse_from_file, parse_from_str
 from generator_android import generate_android
 from generator_ios import generate_ios
 from generator_wp import generate_wp
-from dsl.textx.applang_semantics import get_semantic_model_from_file
+from dsl.textx.semantics import get_semantic_model_from_file
 
 
 def generate_apps_from_textx_file(file_path, metamodel_file_path, debug=False, output_folder="../../gen/", overwrite_all=True, eclipse_gen=True, export_to_dot=True):

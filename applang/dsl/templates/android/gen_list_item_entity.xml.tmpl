@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+{{xml_gen_comment}}
+<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/LayoutListItem"
+    android:shrinkColumns="1" >
+    {% for attr in entity.attributes if not attr.exclude_from_list %}
+    <TableRow
+        style="@style/ListItemDivider{{'.First' if loop.first}}">
+
+        <TextView
+            android:id="@+id/tv_{{attr.name|cameltounder}}_label"
+            android:text="@string/ent_{{entity.name|cameltounder}}_{{attr.name|cameltounder}}"
+            style="@style/TextViewLabel" />
+        {% if not attr.primitive_type == 'image' %}
+        <TextView
+            android:id="@+id/tv_{{attr.name|cameltounder}}" />
+        {% else %}
+        <ImageView
+            android:id="@+id/iv_{{attr.name|cameltounder}}"
+            android:contentDescription="@string/ent_{{entity.name|cameltounder}}_{{attr.name|cameltounder}}"
+            style="@style/ImageViewDetails" />
+        {% endif %}
+    </TableRow>
+    {% endfor %}
+</TableLayout>

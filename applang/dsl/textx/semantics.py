@@ -4,6 +4,10 @@ from textx.exceptions import TextXSemanticError
 from dsl.consts import DEF_ANDROID_TARGET_VER, DEF_ANDROID_MIN_VER
 from dsl.utils import camel_to_under
 
+TYPE_TEXT_IN_DB = ['string', 'numeric_string', 'textarea_string', 'image', 'telephone_type', 'address_type']
+TYPE_INT_IN_DB = ['int', 'bool', 'date']
+TYPE_REAL_IN_DB = ['float']
+
 
 def get_semantic_model_from_file(applang_file, metamodel_file, export_to_dot=False):
     metamodel = metamodel_from_file(metamodel_file)
@@ -69,6 +73,8 @@ def check_semantics(model):
             # If attribute label does not exist, put attribute name instead.
             if not attribute.label:
                 attribute.label = attribute.name.title()
+            if attribute.view_from_container and not attribute.reference_type:
+                raise TextXSemanticError("Cannot have 'viewFromContainer' on an non-reference type, in attribute '{}', entity '{}'".format(attribute.name, entity.name))
 
     return model
 

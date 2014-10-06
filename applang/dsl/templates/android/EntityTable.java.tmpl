@@ -1,0 +1,60 @@
+{{java_gen_comment}}
+package {{config.qname}}.databases;
+
+import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
+
+public class {{entity.name}}Table {
+	// Database table
+	public static final String TABLE_NAME = {{entity.name|cameltounder}};
+	public static final String COLUMN_ID = "_id";
+	{% for attr in entity.attributes %}
+	{% if attr.primitive_type %}
+	public static final String COLUMN_{{attr.name|cameltounder|upper}} = "{{attr.name|cameltounder}}";
+	{% else %}
+	public static final String COLUMN_ID_{{attr.name|cameltounder|upper}} = "id_{{attr.name|cameltounder}}";
+	{% endif %}
+	{% endfor %}
+	
+	// Database creation SQL statement
+	private static final String DATABASE_CREATE = 
+			"CREATE TABLE IF NOT EXISTS " + TABLE_NAME + "(" 
+			+ COLUMN_ID + " integer primary key autoincrement, "
+			{% for attr in entity.attributes %}
+			{% if attr.primitive_type %}
+            + COLUMN_{{attr.name|cameltounder|upper}}
+            {%- if attr.primitive_type in TYPE_TEXT_IN_DB %} + " text "
+            {%- elif attr.primitive_type in TYPE_INT_IN_DB %} + " integer "
+            {%- elif attr.primitive_type in TYPE_REAL_IN_DB %} + " real "
+            {% endif -%}
+			{%- if attr.required %} + " not null " {% endif %}
+			{%- if attr.unique %} + " unique " {% endif %}
+			{% else %}
+			+ COLUMN_ID_{{attr.name|cameltounder|upper}} + " integer "
+			{%- if attr.required %} + " not null " {% endif -%}
+			{%- if attr.unique %} + " unique " {% endif -%}
+			+ ", FOREIGN KEY (" + COLUMN_ID_{{attr.name|cameltounder|upper}} + ") REFERENCES "
+			+ {{attr.reference_type.name}}Table + "(" + {{attr.reference_type.name}}Table.COLUMN_ID + ")"{% endif %}
+			{%- if not loop.last -%}
+			+ ", "
+			{% endif %}
+			{% endfor -%}
+			+ ");";
+
+	public static void onCreate(SQLiteDatabase db) {
+		db.execSQL(DATABASE_CREATE);
+	}
+	
+	public static void onUpgrade(SQLiteDatabase db, int oldVersion,
+			int newVersion) {
+		Log.w({{entity.name}}Table.class.getName(),
+				"Upgrading database from version " + oldVersion + " to "
+						+ newVersion + ", which will destroy all old data");
+		db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME);
+		onCreate(db);
+	}
+	
+	public static void deleteAll(SQLiteDatabase db){
+		db.execSQL("DELETE FROM " + TABLE_NAME);
+	}
+}
