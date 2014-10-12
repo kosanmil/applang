@@ -1,7 +1,7 @@
 from dsl.applang_exceptions import UnimplementedPlatformException
 
 
-def generate_wp(model, debug=False, output_folder="../gen/", overwrite_all = True):
+def generate_wp(model, output_folder="../gen/", overwrite_all = True):
     """
     Generate the windows phone application with the applang parser that contains the model.
     :param parser: The parser which was used to parse the applang language

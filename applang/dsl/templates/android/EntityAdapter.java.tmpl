@@ -1,0 +1,75 @@
+package {{config.qname}}.adapters;
+
+import android.content.Context;
+import android.database.Cursor;
+import android.support.v4.widget.CursorAdapter;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.TextView;
+import applang.android.framework.utils.ImageUtils;
+
+import com.nostra13.universalimageloader.core.ImageLoader;
+
+import {{config.qname}}.R;
+{% if not entity.name in ref_entity_names %}
+import {{config.qname}}.databases.{{entity.name}}Table;
+{% endif %}
+{% for name in ref_entity_names %}
+import {{config.qname}}.databases.{{name}}Table;
+{% endfor %}
+
+public class {{entity.name}}Adapter extends CursorAdapter {
+
+	private LayoutInflater mInflater;
+
+	public DrzavaAdapter(Context context, Cursor c, int flags) {
+		super(context, c, flags);
+		mInflater = (LayoutInflater) context
+				.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+	}
+
+	@Override
+	public View newView(Context context, Cursor cursor, ViewGroup parent) {
+		return mInflater.inflate(R.layout.gen_list_item_{{entity.name|cameltounder}}, parent, false);
+	}
+
+	@Override
+	public void bindView(View view, Context context, Cursor cursor) {
+	    {% for attr in entity.attributes if not attr.exclude_from_list%}
+	    {% if attr.primitive_type %}
+	        {% if attr.primitive_type == 'image' %}
+	    Image iv_{{attr.name|cameltounder}} = (ImageView) view.findViewById(R.id.iv_{{attr.name|cameltounder}});
+	    ImageLoader.getInstance().displayImage(
+	        cursor.getString(cursor.getColumnIndex({{entity.name}}Table.COLUMN_{{attr.name|cameltounder|upper}})),
+	        iv_{{attr.name|cameltounder}}, ImageUtils.DISPLAY_OPTIONS);
+	        {% elif attr.primitive_type == 'bool' %}
+	    TextView tv_{{attr.name|cameltounder}} = (TextView) view.findViewById(R.id.tv_{{attr.name|cameltounder}});
+	    tv_{{attr.name|cameltounder}}.setText(ViewUtils
+				.getYesNoStringByBoolean(getResources(),
+						cursor.getInt(cursor.getColumnIndex({{entity.name}}Table.COLUMN_{{attr.name|cameltounder|upper}})) != 0));
+	        {% elif attr.primitive_type == 'date' %}
+	    TextView tv_{{attr.name|cameltounder}} = (TextView) view.findViewById(R.id.tv_{{attr.name|cameltounder}});
+	    if(!cursor.isNull(cursor.getColumnIndex({{entity.name}}Table.COLUMN_{{attr.name|cameltounder|upper}})))
+			tv_{{attr.name|cameltounder}}.setText(DatePickerUtils.formatDateByLocale(getActivity(),
+					cursor.getLong(cursor.getColumnIndex(FirmaTable.COLUMN_{{attr.name|cameltounder|upper}}))));
+	        {% else %}
+	    TextView tv_{{attr.name|cameltounder}} = (TextView) view.findViewById(R.id.tv_{{attr.name|cameltounder}});
+	    tv_{{attr.name|cameltounder}}.setText(cursor.getString(cursor
+	            .getColumnIndex({{entity.name}}.COLUMN_{{attr.name|cameltounder|upper}})));
+	        {% endif %}
+	    {% else %}
+	    TextView tv_{{attr.name|cameltounder}} = (TextView) view.findViewById(R.id.tv_{{attr.name|cameltounder}});
+	        {% if attr.required %}
+	    tv_{{attr.name|cameltounder}}.setText(cursor.getString(cursor
+	            .getColumnIndex("{{attr.name|cameltounder}}_" + {{attr.reference_type.name}}Table.COLUMN_{{attr.reference_type.to_string.name|cameltounder|upper if attr.reference_type.to_string else 'ID'}})));
+            {% else %}
+        tv_{{attr.name|cameltounder}}.setText(ViewUtils.getStringOrNoneFromCursor(
+                getActivity(), cursor, "{{attr.name|cameltounder}}_" + {{attr.reference_type.name}}Table.COLUMN_{{attr.reference_type.to_string.name|cameltounder|upper if attr.reference_type.to_string else 'ID'}}));
+            {% endif %}
+	    {% endif %}
+	    {% endfor %}
+	}
+
+}

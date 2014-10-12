@@ -1,8 +1,9 @@
+from __builtin__ import hasattr
 from textx.metamodel import metamodel_from_file
 from textx.export import metamodel_export, model_export
 from textx.exceptions import TextXSemanticError
 from dsl.consts import DEF_ANDROID_TARGET_VER, DEF_ANDROID_MIN_VER
-from dsl.utils import camel_to_under
+from dsl.utils import camel_to_under, print_log
 
 TYPE_TEXT_IN_DB = ['string', 'numeric_string', 'textarea_string', 'image', 'telephone_type', 'address_type']
 TYPE_INT_IN_DB = ['int', 'bool', 'date']
@@ -12,19 +13,19 @@ TYPE_REAL_IN_DB = ['float']
 def get_semantic_model_from_file(applang_file, metamodel_file, export_to_dot=False):
     metamodel = metamodel_from_file(metamodel_file)
     if export_to_dot:
-        print ('Exporting metamodel to dot')
+        print_log('Exporting metamodel to dot')
         metamodel_export(metamodel, 'applang_meta.dot')
-        print ('Exporting metamodel to dot completed')
+        print_log('Exporting metamodel to dot completed')
     model = metamodel.model_from_file(applang_file)
 
-    print ('Checking model semantics')
+    print_log('Checking model semantics')
     model = check_semantics(model)
-    print ('Checking model semantics completed')
+    print_log('Checking model semantics completed')
 
     if export_to_dot:
-        print ('Exporting model to dot')
+        print_log('Exporting model to dot')
         model_export(model, 'applang_model.dot')
-        print ('Exporting model to dot completed')
+        print_log('Exporting model to dot completed')
     return model
 
 
@@ -51,8 +52,6 @@ def check_semantics(model):
             android_specs.target_version = DEF_ANDROID_TARGET_VER
         if android_specs.min_version > android_specs.target_version:
             raise TextXSemanticError('In Android Specs: Minimum version cannot be greater than the target version')
-    print("{} {} {}".format(android_specs.sdk_path, android_specs.min_version, android_specs.target_version))
-    print(model.config.qname)
 
     if not model.entities:
         raise TextXSemanticError('At least one entity is required')
@@ -60,6 +59,7 @@ def check_semantics(model):
     entity_names = [x.name for x in model.entities]
     if len(entity_names) != len(set(entity_names)):
         raise TextXSemanticError('Duplicate entity names detected!')
+
     for entity in model.entities:
         # If entity label does not exist, put entity name instead.
         if not entity.label:
@@ -69,12 +69,35 @@ def check_semantics(model):
         if len(attribute_names) != len(set(attribute_names)):
             raise TextXSemanticError('Duplicate attribute names in entity "{}" detected!'.format(entity.name))
 
-        for attribute in entity.attributes:
+        for attr in entity.attributes:
             # If attribute label does not exist, put attribute name instead.
-            if not attribute.label:
-                attribute.label = attribute.name.title()
-            if attribute.view_from_container and not attribute.reference_type:
-                raise TextXSemanticError("Cannot have 'viewFromContainer' on an non-reference type, in attribute '{}', entity '{}'".format(attribute.name, entity.name))
+            if not attr.label:
+                attr.label = attr.name.title()
+            if attr.view_from_container and not attr.reference_type:
+                raise TextXSemanticError(
+                    "Cannot have 'viewFromContainer' on an non-reference type, in attribute '{}', entity '{}'"
+                     .format(attr.name, entity.name))
+            #Setting toString of the entity
+            if attr.to_string:
+                if not attr.primitive_type or attr.primitive_type == 'image':
+                    raise TextXSemanticError(
+                        "toString attribute must be a non-image primitive type, in attribute '{}', entity '{}'"
+                        .format(attr.name, entity.name))
+                if not hasattr(entity, 'to_string'):
+                    entity.to_string = attr
+                else:
+                    raise TextXSemanticError(
+                        "Entity cannot have more than one toString attribute, in attribute '{}'"
+                        ", toString attribute '{}' entity '{}'"
+                        .format(attr.name, entity.to_string.name, entity.name))
+            if attr.searchable and attr.reference_type:
+                if not hasattr(attr.reference_type, 'to_string'):
+                    if len([ref_attr for ref_attr in attr.reference_type.attributes if ref_attr.to_string]) == 0:
+                        raise TextXSemanticError(
+                            "The entity that is reference by a searchable attribute must have a 'toString' attribute, "
+                            "\nfrom searchable attribute '{}' in entity '{}'"
+                            .format(attr.name, entity.name))
+
 
     return model
 

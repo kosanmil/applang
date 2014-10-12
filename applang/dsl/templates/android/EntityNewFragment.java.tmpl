@@ -1,0 +1,273 @@
+{{java_gen_comment}}
+package {{config.qname}}.fragments;
+
+import android.app.Activity;
+import android.content.ContentValues;
+import android.content.Intent;
+import android.database.Cursor;
+import android.net.Uri;
+import android.os.Bundle;
+import android.text.TextUtils;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.Toast;
+import applang.android.framework.fragments.AbstractInputFragment;
+import applang.android.framework.utils.DialogUtils;
+import applang.android.framework.utils.ImageUtils;
+
+import com.nostra13.universalimageloader.core.ImageLoader;
+
+import {{config.qname}}.R;
+{% if not entity.name in ref_entity_names %}
+import {{config.qname}}.databases.{{entity.name}}Table;
+import {{config.qname}}.content_providers.{{entity.name}}ContentProvider;
+{% endif %}
+{% for name in ref_entity_names %}
+import {{config.qname}}.databases.{{name}}Table;
+import {{config.qname}}.content_providers.{{name}}ContentProvider;
+{% endfor %}
+
+public class {{entity.name}}NewFragment extends AbstractInputFragment {
+
+    {% for attr in entity.attributes if attr.primitive_type and attr.primitive_type == 'image' %}
+	public static final int REQ_CODE_{{attr.name|cameltounder|upper}}_TAKE_PHOTO = {{loop.index}}00;
+	public static final int REQ_CODE_{{attr.name|cameltounder|upper}}_CHOOSE_IMAGE = {{loop.index}}01;
+	public static final String STATE_KEY_{{attr.name|cameltounder|upper}}_URI = "{{attr.name|cameltounder}}_uri";
+	{% endfor %}
+	public static {{entity.name}}NewFragment newInstance() {
+		{{entity.name}}NewFragment fragment = new {{entity.name}}NewFragment();
+		Bundle args = new Bundle();
+		args.putBoolean(ARG_KEY_IS_EDIT, false);
+		args.putInt(ARG_KEY_LAYOUT_ID, R.layout.gen_fragment_{{entity.name|cameltounder}}_new);
+		args.putInt(ARG_KEY_ENTITY_NAME_RES_ID, R.string.ent_{{entity.name|cameltounder}});
+		args.putString(ARG_KEY_CONTENT_URI_STRING,
+				{{entity.name}}ContentProvider.CONTENT_URI.toString());
+
+		fragment.setArguments(args);
+		return fragment;
+	}
+
+	public static {{entity.name}}NewFragment newInstance(String initColumnName,
+			long initValue) {
+		{{entity.name}}NewFragment fragment = newInstance();
+		Bundle args = fragment.getArguments();
+		args.putStringArray(ARG_KEY_NEW_INIT_COLUMN_NAMES,
+				new String[] { initColumnName });
+		args.putLongArray(ARG_KEY_NEW_INIT_LONG_VALUES,
+				new long[] { initValue });
+		fragment.setArguments(args);
+		return fragment;
+	}
+
+	@Override
+	protected void initializeSpinners() {
+	    {% for attr in entity.attributes if attr.reference_type %}
+        {
+            //{{attr.name}} spinner
+			String[] projection = {
+					{{attr.reference_type.name}}Table.TABLE_NAME + "." + {{attr.reference_type.name}}Table.COLUMN_ID
+					{% if attr.reference_type.to_string %}
+					, {{attr.reference_type.name}}Table.TABLE_NAME + "." + {{attr.reference_type.name}}Table.COLUMN_{{attr.reference_type.to_string.name|cameltounder|upper}}
+					{% endif %}
+			};
+			Cursor cursorEntity = getActivity().getContentResolver().query(
+					{{attr.reference_type.name}}ContentProvider.CONTENT_URI, projection, null, null,
+					null);
+			MatrixCursor cursorExtras = new MatrixCursor(new String[] { "_id"
+			        {% if attr.reference_type.to_string %}
+			        , {{attr.reference_type.name}}Table.COLUMN_{{attr.reference_type.to_string.name|cameltounder|upper}}
+			        {% endif %}
+			        });
+			cursorExtras.addRow(new Object[] { BaseActivity.SPINNER_EMPTY_ID,
+					getResources().getString({{'R.string.spinner_choose' if attr.required else 'R.string.spinner_none'}}) });
+			Cursor cursorExtended = new MergeCursor(new Cursor[] {
+					cursorExtras, cursorEntity });
+			SimpleCursorAdapter adapter = new SimpleCursorAdapter(
+					getActivity(),
+					android.R.layout.simple_spinner_dropdown_item,
+					cursorExtended, new String[] { {{attr.reference_type.name}}Table.COLUMN_{{attr.reference_type.to_string.name|cameltounder|upper if attr.reference_type.to_string else 'ID'}} },
+					new int[] { android.R.id.text1 }, 0);
+			Spinner spinner = (Spinner) getView().findViewById(
+			        R.id.sp_{{attr.name|cameltounder}});
+			spinner.setAdapter(adapter);
+		}
+	    {% else %}
+		// Does not have spinners. Do nothing.
+		{% endfor %}
+	}
+
+	@Override
+	protected ContentValues getDataFromInput() {
+		ContentValues cv = new ContentValues();
+        {% for attr in entity.attributes %}
+        {% if attr.primitive_type %}
+            {% if attr.primitive_type == 'image' %}
+        ImageView iv_{{attr.name|cameltounder}} = (ImageView) getView().findViewById(R.id.iv_{{attr.name|cameltounder}});
+        cv.put({{entity.name}}Table.COLUMN_{{attr.name|cameltounder|upper}},
+                iv_{{attr.name|cameltounder}}.getTag() != null ? (String) iv_{{attr.name|cameltounder}}.getTag() : null);
+            {% elif attr.primitive_type == 'bool' %}
+		cv.put({{entity.name}}Table.COLUMN_{{attr.name|cameltounder|upper}},
+		        ((CheckBox) getView().findViewById(R.id.cb_{{attr.name|cameltounder}})).isChecked());
+		    {% elif attr.primitive_type == 'date' %}
+		DatePicker dp_{{attr.name|cameltounder}} = (DatePicker) getView().findViewById(R.id.dp_{{attr.name|cameltounder}});
+		Calendar {{attr.name|cameltounder}} = DatePickerUtils.getCalendarFromDatePicker(dp_{{attr.name|cameltounder}});
+		if({{attr.name|cameltounder}} == null)
+			cv.putNull({{entity.name}}Table.COLUMN_{{attr.name|cameltounder|upper}});
+		else
+			cv.put({{entity.name}}Table.COLUMN_{{attr.name|cameltounder|upper}},
+			        {{attr.name|cameltounder}}.getTimeInMillis());
+            {% else %}
+        cv.put({{entity.name}}Table.COLUMN_{{attr.name|cameltounder|upper}},
+		        ((EditText) getView().findViewById(R.id.et_{{attr.name|cameltounder}})).getText().toString());
+            {% endif %}
+        {% else %}
+        Spinner sp_{{attr.name|cameltounder}} = (Spinner) getView().findViewById(R.id.sp_{{attr.name|cameltounder}});
+		long id_{{attr.name|cameltounder}} = sp_{{attr.name|cameltounder}}.getSelectedItemId();
+		if (id_{{attr.name|cameltounder}} == BaseActivity.SPINNER_EMPTY_ID)
+			cv.putNull({{entity.name}}Table.COLUMN_ID_{{attr.name|cameltounder|upper}});
+		else
+			cv.put({{entity.name}}Table.COLUMN_ID_{{attr.name|cameltounder|upper}}, id_{{attr.name|cameltounder}});
+        {% endif %}
+        {% endfor %}
+		return cv;
+	}
+
+	@Override
+	protected boolean checkInput() {
+		boolean retVal = true;
+		{% for attr in entity.attributes %}
+		{% if loop.first %}
+		StringBuilder toastMessageBuilder = new StringBuilder();
+		String newLine = "";
+		{% endif %}
+		{% if attr.reference_type %}
+		    {% if attr.required %}
+		Long {{attr.name|cameltounder}} = ((Spinner) getView().findViewById(R.id.sp_{{attr.name|cameltounder}})).getSelectedItemId();
+		if({{attr.name|cameltounder}} == AdapterView.INVALID_ROW_ID || {{attr.name|cameltounder}} == BaseActivity.SPINNER_EMPTY_ID){
+			retVal = false;
+			toastMessageBuilder.append(newLine
+					+ getResources().getString(
+							R.string.toast_input_not_selected,
+							getResources().getString(
+									R.string.ent_{{entity.name|cameltounder}}_{{attr.name|cameltounder}})));
+			newLine = "\n";
+		}
+		    {% endif %}
+		{% elif attr.primitive_image %}
+		    {% if attr.required %}
+		ImageView iv_{{attr.name|cameltounder}} = (ImageView) getView().findViewById(R.id.iv_{{attr.name|cameltounder}});
+        String {{attr.name|cameltounder}}_uri = iv_{{attr.name|cameltounder}}.getTag() != null ? (String) iv_{{attr.name|cameltounder}}.getTag() : null;
+        if (TextUtils.isEmpty({{attr.name|cameltounder}}_uri)) {
+			retVal = false;
+			toastMessageBuilder.append(newLine
+					+ getResources().getString(
+							R.string.toast_input_required_single,
+							getResources().getString(
+									R.string.ent_{{entity.name|cameltounder}}_{{attr.name|cameltounder}})));
+			newLine = "\n";
+		}
+			{% endif %}
+		{% elif attr.primitive_type == 'date' or attr.primitive_type == 'bool' %}
+		{% else %}
+		    {% if attr.required %}
+		String {{attr.name|cameltounder}} = ((EditText) getView().findViewById(R.id.et_{{attr.name|cameltounder}}))
+				.getText().toString();
+		if (TextUtils.isEmpty({{attr.name|cameltounder}})) {
+			retVal = false;
+			toastMessageBuilder.append(newLine
+					+ getResources().getString(
+							R.string.toast_input_required_single,
+							getResources().getString(
+									R.string.ent_{{entity.name|cameltounder}}_{{attr.name|cameltounder}})));
+			newLine = "\n";
+		}
+			{% endif %}
+		{% endif %}
+		{% if loop.last %}
+		if (toastMessageBuilder.length() > 0)
+			Toast.makeText(getActivity(), toastMessageBuilder,
+					Toast.LENGTH_LONG).show();
+		{% endif %}
+		{% endfor %}
+		return retVal;
+	}
+
+	@Override
+	protected void putDataInViewControls(Cursor cursor) {
+	    {% for attr in entity.attributes if attr.reference_type %}
+	    {% if loop.first %}
+	    cursor.moveToFirst();
+	    {% endif %}
+		{
+			int columnIndex = cursor
+					.getColumnIndex({{entity.name}}Table.COLUMN_ID_{{attr.name|cameltounder|upper}});
+			if (columnIndex != -1) {
+				Spinner spinner = (Spinner) getView().findViewById(
+						R.id.sp_{{attr.name}});
+				ViewUtils.selectSpinnerItemById(spinner,
+						cursor.getLong(columnIndex));
+			}
+		}
+		{% else %}
+		// Does not have spinners. Do nothing.
+		{% endfor %}
+	}
+
+    @Override
+	protected void setOnClickListeners() {
+	{% for attr in entity.attributes if attr.primitive_type and attr.primitive_type == 'image' %}
+	    {
+	        //{{attr.name}} image button
+            Button btn = (Button) getView().findViewById(R.id.btn_{{attr.name|cameltounder}});
+            btn.setOnClickListener(new OnClickListener() {
+
+                @Override
+                public void onClick(View v) {
+                    DialogUtils.showChooseImageLoadDialog(getFragmentManager(),
+                            {{entity.name}}NewFragment.this, REQ_CODE_{{attr.name|cameltounder|upper}}_TAKE_PHOTO,
+                            REQ_CODE_{{attr.name|cameltounder|upper}}_CHOOSE_IMAGE);
+                }
+            });
+		}
+	{% else %}
+	    //No click listeners to set
+	{% endfor %}
+	}
+
+    {% for attr in entity.attributes if attr.primitive_type and attr.primitive_type == 'image' %}
+	{% if loop.first %}
+	@Override
+	public void onSaveInstanceState(Bundle outState) {
+		if(getView() == null)
+			return;
+	{% endif %}
+	    {
+            ImageView imageView = (ImageView) getView().findViewById(R.id.iv_{{attr.name|cameltounder}});
+            if (imageView.getTag() != null && imageView.getTag() instanceof String)
+                outState.putString(STATE_KEY_{{attr.name|cameltounder|upper}}_URI, (String) imageView.getTag());
+	    }
+	{% if loop.last %}
+		super.onSaveInstanceState(outState);
+	}
+	{% endif %}
+	{% endfor %}
+
+	@Override
+	protected void initializeImageViews(Bundle savedInstanceState) {
+		if(savedInstanceState == null)
+			return;
+    {% for attr in entity.attributes if attr.primitive_type and attr.primitive_type == 'image' %}
+        {
+            String uriString = savedInstanceState.getString(STATE_KEY_{{attr.name|cameltounder|upper}}_URI);
+            ImageView imageView = (ImageView) getView().findViewById(R.id.iv_{{attr.name|cameltounder}});
+            ImageLoader.getInstance().displayImage(uriString, imageView,
+                    ImageUtils.DISPLAY_OPTIONS, new ImageUtils.TagImageViewLoadingListener());
+		}
+	{% else %}
+	    //No imageViews to initiallize
+	{% endfor %}
+	}
+}

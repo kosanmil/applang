@@ -52,7 +52,7 @@
             </TableRow>
             {% endfor %}
         </TableLayout>
-        {% for attr in entity.attributes %}
+        {% for entity_container, attr in view_container_attrs %}
         {% if loop.first %}
         <TableLayout
             style="@style/Layout"
@@ -61,12 +61,12 @@
             <TableRow
                 style="@style/DetailsItemDivider" >
                 <TextView
-                    android:id="@+id/tv_{{attr.reference_type.name|cameltounder}}_{{attr.name|cameltounder}}_label"
+                    android:id="@+id/tv_{{entity_container.name|cameltounder}}_{{attr.name|cameltounder}}_label"
                     style="@style/TextViewLabel"
-                    android:text="@string/ent_in_{{attr.reference_type.name|cameltounder}}_as_{{attr.name|cameltounder}}" />
+                    android:text="@string/ent_in_{{entity_container.name|cameltounder}}_as_{{attr.name|cameltounder}}" />
 
                 <Button
-                    android:id="@+id/btn_{{attr.reference_type.name|cameltounder}}_{{attr.name|cameltounder}}"
+                    android:id="@+id/btn_{{entity_container.name|cameltounder}}_{{attr.name|cameltounder}}"
                     android:layout_weight="1"
                     android:text="@string/btn_show" />
             </TableRow>

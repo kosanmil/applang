@@ -6,7 +6,7 @@ import applang.android.framework.fragments.AbstractListFragment;
 import applang.android.framework.fragments.ListSubFragment;
 import {{config.qname}}.R;
 import {{config.qname}}.adapters.{{entity.name}}Adapter;
-import {{config.qname}}.contentProviders.FirmaContentProvider;
+import {{config.qname}}.content_providers.FirmaContentProvider;
 {% if not entity.name in ref_entity_names %}
 import {{config.qname}}.databases.{{entity.name}}Table;
 {% endif %}
@@ -47,12 +47,13 @@ public class {{entity.name}}ListFragment extends AbstractListFragment {
 				{% if attr.primitive_type %}
 				{{entity.name}}Table.TABLE_NAME + "." + {{entity.name}}Table.COLUMN_{{attr.name|cameltounder|upper}}
 				{% else %}
-				"{{attr.name|cameltounder}}" + "." + {{attr.reference_type.name}}Table.COLUMN_{{attr.reference_type.to_string.name if attr.reference_type.to_string else 'ID'}} + " as " + "{{attr.name|cameltounder}}_" + {{attr.reference_type.name}}Table.COLUMN_{{attr.reference_type.to_string.name if attr.reference_type.to_string else 'ID'}}
+				"{{attr.name|cameltounder}}" + "." + {{attr.reference_type.name}}Table.COLUMN_{{attr.reference_type.to_string.name|cameltounder|upper if attr.reference_type.to_string else 'ID'}} + " as " + "{{attr.name|cameltounder}}_" + {{attr.reference_type.name}}Table.COLUMN_{{attr.reference_type.to_string.name|cameltounder|upper if attr.reference_type.to_string else 'ID'}}
 				{% endif %}
 				{% if not loop.last %}
 				,
 				{% endif %}
 				{% endfor %}
+				};
 		return ListSubFragment.newInstance(R.string.ent_{{entity.name|cameltounder}}, projection,
 				{{entity.name}}ContentProvider.CONTENT_URI.toString(),
 				{{entity.name}}Adapter.class.getName(),
@@ -62,7 +63,17 @@ public class {{entity.name}}ListFragment extends AbstractListFragment {
 
 	@Override
 	protected String getSelectionForSearchQuery() {
-	    //TODO Template search
-	    return "";
+	    String selection = "";
+	    {% for attr in entity.attributes if attr.searchable %}
+	    {% if attr.primitive_type %}
+	    selection += {{entity.name}}Table.TABLE_NAME + "." + {{entity.name}}Table.COLUMN_{{attr.name|cameltounder|upper}} + " LIKE ?1";
+	    {% else %}
+	    selection += "{{attr.name|cameltounder}}" + "." + {{attr.reference_type.name}}Table.COLUMN_{{attr.reference_type.to_string.name|cameltounder|upper if attr.reference_type.to_string}} + " LIKE ?1";
+	    {% endif %}
+	    {% if not loop.last %}
+	    selection += " OR ";
+	    {% endif %}
+	    {% endfor %}
+	    return selection;
 	}
 }

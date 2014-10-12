@@ -1,0 +1,160 @@
+{{java_gen_comment}}
+package {{config.qname}}.fragments;
+
+import android.database.Cursor;
+import android.os.Bundle;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.TextView;
+import applang.android.framework.fragments.AbstractDetailsFragment;
+import applang.android.framework.utils.ImageUtils;
+import com.nostra13.universalimageloader.core.ImageLoader;
+import {{config.qname}}.R;
+import {{config.qname}}.content_providers.{{entity.name}}ContentProvider;
+import {{config.qname}}.impl.fragments.{{entity.name}}EditFragmentImpl;
+{% if not entity.name in ref_entity_names %}
+import {{config.qname}}.databases.{{entity.name}}Table;
+{% endif %}
+{% for name in ref_entity_names %}
+import {{config.qname}}.databases.{{name}}Table;
+{% endfor %}
+{% for entity_container_name in view_container_ref_entity_names if not entity_container_name in ref_entity_names %}
+import {{config.qname}}.databases.{{entity_container_name}}Table;
+{% endfor %}
+
+public class {{entity.name}}DetailsFragment extends AbstractDetailsFragment {
+	
+	public static {{entity.name}}DetailsFragment newInstance(Long id) {
+		{{entity.name}}DetailsFragment fragment = new {{entity.name}}DetailsFragment();
+		Bundle args = new Bundle();
+		args.putInt(ARG_KEY_LAYOUT_ID, R.layout.gen_fragment_{{entity.name|cameltounder}}_details);
+		args.putInt(ARG_KEY_ENTITY_NAME_RES_ID, R.string.ent_{{entity.name|cameltounder}});
+		args.putString(ARG_KEY_CONTENT_URI_STRING,
+				{{entity.name}}ContentProvider.CONTENT_URI.toString());
+
+		String[] projection = {
+				{{entity.name}}Table.TABLE_NAME + "." + {{entity.name}}Table.COLUMN_ID,
+				{% for attr in entity.attributes %}
+				{% if attr.primitive_type %}
+				{{entity.name}}Table.TABLE_NAME + "." + {{entity.name}}Table.COLUMN_{{attr.name|cameltounder|upper}}
+				{% else %}
+				"{{attr.name|cameltounder}}" + "." + {{attr.reference_type.name}}Table.COLUMN_{{attr.reference_type.to_string.name|cameltounder|upper if attr.reference_type.to_string else 'ID'}} + " as " + "{{attr.name|cameltounder}}_" + {{attr.reference_type.name}}Table.COLUMN_{{attr.reference_type.to_string.name|cameltounder|upper if attr.reference_type.to_string else 'ID'}}
+				{% endif %}
+				{% if not loop.last %}
+				,
+				{% endif %}
+				{% endfor %}
+				};
+		args.putStringArray(ARG_KEY_PROJECTION, projection);
+		args.putString(ARG_KEY_EDIT_FRAG_CLASS_NAME,
+				{{entity.name}}EditFragmentImpl.class.getName());
+		args.putLong(ARG_KEY_ID, id);
+
+		fragment.setArguments(args);
+		return fragment;
+	}
+
+	@Override
+	protected void putDataInViewControls(Cursor cursor) {
+	    {% for attr in entity.attributes %}
+	    {% if attr.primitive_type %}
+	        {% if attr.primitive_type == 'image' %}
+	    Image iv_{{attr.name|cameltounder}} = (ImageView) getView().findViewById(R.id.iv_{{attr.name|cameltounder}});
+	    ImageLoader.getInstance().displayImage(
+	        cursor.getString(cursor.getColumnIndex({{entity.name}}Table.COLUMN_{{attr.name|cameltounder|upper}})),
+	        iv_{{attr.name|cameltounder}}, ImageUtils.DISPLAY_OPTIONS);
+	        {% elif attr.primitive_type == 'bool' %}
+	    TextView tv_{{attr.name|cameltounder}} = (TextView) getView().findViewById(R.id.tv_{{attr.name|cameltounder}});
+	    tv_{{attr.name|cameltounder}}.setText(ViewUtils
+				.getYesNoStringByBoolean(getResources(),
+						cursor.getInt(cursor.getColumnIndex({{entity.name}}Table.COLUMN_{{attr.name|cameltounder|upper}})) != 0));
+	        {% elif attr.primitive_type == 'date' %}
+	    TextView tv_{{attr.name|cameltounder}} = (TextView) getView().findViewById(R.id.tv_{{attr.name|cameltounder}});
+	    if(!cursor.isNull(cursor.getColumnIndex({{entity.name}}Table.COLUMN_{{attr.name|cameltounder|upper}})))
+			tv_{{attr.name|cameltounder}}.setText(DatePickerUtils.formatDateByLocale(getActivity(),
+					cursor.getLong(cursor.getColumnIndex(FirmaTable.COLUMN_{{attr.name|cameltounder|upper}}))));
+			{% elif attr.primitive_type == 'address_type' %}
+		TextView tv_{{attr.name|cameltounder}} = (TextView) getView().findViewById(R.id.tv_{{attr.name|cameltounder}});
+	    final String {{attr.name|cameltounder}} = cursor.getString(cursor
+				.getColumnIndex({{entity.name}}Table.COLUMN_{{attr.name|cameltounder|upper}}));
+		tv_{{attr.name|cameltounder}}.setText({{attr.name|cameltounder}});
+		ImageButton btn_{{attr.name|cameltounder}}_map = (ImageButton) getView().findViewById(R.id.btn_{{attr.name|cameltounder}}_map);
+		if(TextUtils.isEmpty({{attr.name|cameltounder}})){
+			btn_{{attr.name|cameltounder}}_map.setVisibility(View.GONE);
+		}
+		else{
+			btn_{{attr.name|cameltounder}}_map.setOnClickListener(new OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					ButtonMethodsUtils.openMapForAddress(getActivity(), {{attr.name|cameltounder}});
+				}
+			});
+		}
+		    {% elif attr.primitive_type == 'telephone_type' %}
+		TextView tv_{{attr.name|cameltounder}} = (TextView) getView().findViewById(R.id.tv_{{attr.name|cameltounder}});
+	    final String {{attr.name|cameltounder}} = cursor.getString(cursor
+				.getColumnIndex({{entity.name}}Table.COLUMN_{{attr.name|cameltounder|upper}}));
+		tv_{{attr.name|cameltounder}}.setText({{attr.name|cameltounder}});
+		ImageButton btn_{{attr.name|cameltounder}}_call = (ImageButton) getView().findViewById(R.id.btn_{{attr.name|cameltounder}}_call);
+		ImageButton btn_{{attr.name|cameltounder}}_message = (ImageButton) getView().findViewById(R.id.btn_{{attr.name|cameltounder}}_message);
+		if(TextUtils.isEmpty({{attr.name|cameltounder}})){
+			btn_{{attr.name|cameltounder}}_call.setVisibility(View.GONE);
+			btn_{{attr.name|cameltounder}}_message.setVisibility(View.GONE);
+		}
+		else{
+			btn_{{attr.name|cameltounder}}_call.setOnClickListener(new OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					ButtonMethodsUtils.dialTelephoneNumber(getActivity(), {{attr.name|cameltounder}});
+				}
+			});
+			btn_{{attr.name|cameltounder}}_message.setOnClickListener(new OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					ButtonMethodsUtils.messageTelephoneNumber(getActivity(), {{attr.name|cameltounder}});
+				}
+			});
+		}
+	        {% else %}
+	    TextView tv_{{attr.name|cameltounder}} = (TextView) getView().findViewById(R.id.tv_{{attr.name|cameltounder}});
+	    tv_{{attr.name|cameltounder}}.setText(cursor.getString(cursor
+	            .getColumnIndex({{entity.name}}.COLUMN_{{attr.name|cameltounder|upper}})));
+	        {% endif %}
+	    {% else %}
+	    TextView tv_{{attr.name|cameltounder}} = (TextView) getView().findViewById(R.id.tv_{{attr.name|cameltounder}});
+	        {% if attr.required %}
+	    tv_{{attr.name|cameltounder}}.setText(cursor.getString(cursor
+	            .getColumnIndex("{{attr.name|cameltounder}}_" + {{attr.reference_type.name}}Table.COLUMN_{{attr.reference_type.to_string.name|cameltounder|upper if attr.reference_type.to_string else 'ID'}})));
+            {% else %}
+        tv_{{attr.name|cameltounder}}.setText(ViewUtils.getStringOrNoneFromCursor(
+                getActivity(), cursor, "{{attr.name|cameltounder}}_" + {{attr.reference_type.name}}Table.COLUMN_{{attr.reference_type.to_string.name|cameltounder|upper if attr.reference_type.to_string else 'ID'}}));
+            {% endif %}
+	    {% endif %}
+	    {% endfor %}
+	    {% for entity_container, attr in view_container_attrs %}
+        {% if loop.first %}
+        final long finalEntityId = mEntityId;
+		final String finalEntityName = cursor.getString(cursor
+				.getColumnIndex({{entity.name}}Table.COLUMN_{{attr.reference_type.to_string.name|cameltounder|upper if attr.reference_type.to_string else 'ID'}}));
+        {% endif %}
+		Button btn_{{entity_container.name|cameltounder}}_{{attr.name|cameltounder}} = (Button) getView().findViewById(
+				R.id.btn_{{entity_container.name|cameltounder}}_{{attr.name|cameltounder}});
+		btn_{{entity_container.name|cameltounder}}_{{attr.name|cameltounder}}.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				{{entity_container.name}}ListFragment fragment = {{entity_container.name}}ListFragment
+						.newInstance({{entity_container.name}}Table.TABLE_NAME + "."
+								+ {{entity_container.name}}Table.COLUMN_ID_{{attr.name|cameltounder|upper}},
+								finalEntityId,
+								getResources().getString(R.string.ent_{{entity_container.name|cameltounder}}_{{attr.name|cameltounder}}) + ": " + finalEntityName);
+				getFragmentManager().beginTransaction()
+				.replace(R.id.content_frame, fragment).addToBackStack(null)
+				.commit();
+			}
+		});
+		{% endfor %}
+	}
+
+}

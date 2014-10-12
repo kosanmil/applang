@@ -1,26 +1,24 @@
 config {
-        app_name = MasterGenerated;
-        app_label = "Master Generated";
-        namespace = master;
-        db_version = 1;
-        start_screen = Drzava;
-        platforms = android;
-        android_specs = {
-            sdk_path = "/home/kosan/software/android-sdk-linux";
-        }
+    app_name = MasterGenerated;
+    app_label = "Master Generated";
+    namespace = master;
+    db_version = 1;
+    start_screen = Drzava;
+    platforms = android, ios;
+    android_specs = {
+        sdk_path = "/home/kosan/software/android-sdk-linux";
     }
+}
 
 entity Drzava ("Država") {
-    //First entity
     sifra("Šifra") : string(required, unique, searchable);
-    naziv : string(required, unique, searchable);
+    naziv : string(required, unique, searchable, toString);
     zastava : image;
 
 }
 
 entity NaseljenoMesto ("Naseljeno Mesto") {
-    //Second entity
-    naziv : string(required, unique, searchable);
+    naziv : string(required, unique, searchable, toString);
     postCode ("Poštanski kod") : numeric_string(required, unique);
     drzava ("Država") : Drzava(required, searchable, viewFromContainer);
     drugaDrzava ("Druga država") : Drzava (viewFromContainer);
@@ -28,7 +26,7 @@ entity NaseljenoMesto ("Naseljeno Mesto") {
 }
 
 entity Firma {
-    naziv : string (required, searchable);
+    naziv : string (required, searchable, toString);
     pib ("PIB") : numeric_string (required, unique);
     domaca ("Domaća") : bool;
     naseljenoMesto : NaseljenoMesto (required, searchable, viewFromContainer);
