@@ -9,6 +9,8 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 import applang.android.framework.utils.ImageUtils;
+import applang.android.framework.utils.ViewUtils;
+import applang.android.framework.utils.DatePickerUtils;
 
 import com.nostra13.universalimageloader.core.ImageLoader;
 
@@ -20,11 +22,12 @@ import {{config.qname}}.databases.{{entity.name}}Table;
 import {{config.qname}}.databases.{{name}}Table;
 {% endfor %}
 
+@SuppressWarnings("unused")
 public class {{entity.name}}Adapter extends CursorAdapter {
 
-	private LayoutInflater mInflater;
+	protected LayoutInflater mInflater;
 
-	public DrzavaAdapter(Context context, Cursor c, int flags) {
+	public {{entity.name}}Adapter(Context context, Cursor c, int flags) {
 		super(context, c, flags);
 		mInflater = (LayoutInflater) context
 				.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -40,14 +43,14 @@ public class {{entity.name}}Adapter extends CursorAdapter {
 	    {% for attr in entity.attributes if not attr.exclude_from_list%}
 	    {% if attr.primitive_type %}
 	        {% if attr.primitive_type == 'image' %}
-	    Image iv_{{attr.name|cameltounder}} = (ImageView) view.findViewById(R.id.iv_{{attr.name|cameltounder}});
+	    ImageView iv_{{attr.name|cameltounder}} = (ImageView) view.findViewById(R.id.iv_{{attr.name|cameltounder}});
 	    ImageLoader.getInstance().displayImage(
 	        cursor.getString(cursor.getColumnIndex({{entity.name}}Table.COLUMN_{{attr.name|cameltounder|upper}})),
 	        iv_{{attr.name|cameltounder}}, ImageUtils.DISPLAY_OPTIONS);
 	        {% elif attr.primitive_type == 'bool' %}
 	    TextView tv_{{attr.name|cameltounder}} = (TextView) view.findViewById(R.id.tv_{{attr.name|cameltounder}});
 	    tv_{{attr.name|cameltounder}}.setText(ViewUtils
-				.getYesNoStringByBoolean(getResources(),
+				.getYesNoStringByBoolean(context.getResources(),
 						cursor.getInt(cursor.getColumnIndex({{entity.name}}Table.COLUMN_{{attr.name|cameltounder|upper}})) != 0));
 	        {% elif attr.primitive_type == 'date' %}
 	    TextView tv_{{attr.name|cameltounder}} = (TextView) view.findViewById(R.id.tv_{{attr.name|cameltounder}});
@@ -57,7 +60,7 @@ public class {{entity.name}}Adapter extends CursorAdapter {
 	        {% else %}
 	    TextView tv_{{attr.name|cameltounder}} = (TextView) view.findViewById(R.id.tv_{{attr.name|cameltounder}});
 	    tv_{{attr.name|cameltounder}}.setText(cursor.getString(cursor
-	            .getColumnIndex({{entity.name}}.COLUMN_{{attr.name|cameltounder|upper}})));
+	            .getColumnIndex({{entity.name}}Table.COLUMN_{{attr.name|cameltounder|upper}})));
 	        {% endif %}
 	    {% else %}
 	    TextView tv_{{attr.name|cameltounder}} = (TextView) view.findViewById(R.id.tv_{{attr.name|cameltounder}});
@@ -66,7 +69,7 @@ public class {{entity.name}}Adapter extends CursorAdapter {
 	            .getColumnIndex("{{attr.name|cameltounder}}_" + {{attr.reference_type.name}}Table.COLUMN_{{attr.reference_type.to_string.name|cameltounder|upper if attr.reference_type.to_string else 'ID'}})));
             {% else %}
         tv_{{attr.name|cameltounder}}.setText(ViewUtils.getStringOrNoneFromCursor(
-                getActivity(), cursor, "{{attr.name|cameltounder}}_" + {{attr.reference_type.name}}Table.COLUMN_{{attr.reference_type.to_string.name|cameltounder|upper if attr.reference_type.to_string else 'ID'}}));
+                context, cursor, "{{attr.name|cameltounder}}_" + {{attr.reference_type.name}}Table.COLUMN_{{attr.reference_type.to_string.name|cameltounder|upper if attr.reference_type.to_string else 'ID'}}));
             {% endif %}
 	    {% endif %}
 	    {% endfor %}

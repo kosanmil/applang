@@ -7,6 +7,9 @@
     <uses-sdk
         android:minSdkVersion="{{android_specs.min_version}}"
         android:targetSdkVersion="{{android_specs.target_version}}" />
+    {% if has_image %}
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    {% endif %}
 
     <application
         android:name="applang.android.framework.ApplangApplication"

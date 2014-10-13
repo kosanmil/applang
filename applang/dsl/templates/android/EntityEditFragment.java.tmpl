@@ -1,28 +1,40 @@
 {{java_gen_comment}}
-package ftn.masterproba.fragments;
+package {{config.qname}}.fragments;
 
+import java.util.Calendar;
 import com.nostra13.universalimageloader.core.ImageLoader;
 
 import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
+import android.database.MergeCursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.v4.widget.SimpleCursorAdapter;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.Spinner;
 import android.widget.Toast;
+import applang.android.framework.activities.BaseActivity;
 import applang.android.framework.fragments.AbstractInputFragment;
+import applang.android.framework.utils.DatePickerUtils;
 import applang.android.framework.utils.DialogUtils;
 import applang.android.framework.utils.ImageUtils;
+import applang.android.framework.utils.ViewUtils;
+import android.database.MatrixCursor;
 
 import {{config.qname}}.R;
+import {{config.qname}}.impl.fragments.{{entity.name}}EditFragmentImpl;
 {% if not entity.name in ref_entity_names %}
 import {{config.qname}}.databases.{{entity.name}}Table;
 import {{config.qname}}.content_providers.{{entity.name}}ContentProvider;
@@ -32,7 +44,8 @@ import {{config.qname}}.databases.{{name}}Table;
 import {{config.qname}}.content_providers.{{name}}ContentProvider;
 {% endfor %}
 
-public class DrzavaEditFragment extends AbstractInputFragment {
+@SuppressWarnings("unused")
+public class {{entity.name}}EditFragment extends AbstractInputFragment {
 
 	{% for attr in entity.attributes if not attr.readonly and attr.primitive_type and attr.primitive_type == 'image' %}
 	public static final int REQ_CODE_{{attr.name|cameltounder|upper}}_TAKE_PHOTO = {{loop.index}}00;
@@ -41,7 +54,7 @@ public class DrzavaEditFragment extends AbstractInputFragment {
 	{% endfor %}
 	
 	public static {{entity.name}}EditFragment newInstance(Long id){
-		{{entity.name}}EditFragment fragment = new {{entity.name}}EditFragment();
+		{{entity.name}}EditFragment fragment = new {{entity.name}}EditFragmentImpl();
 		Bundle args = new Bundle();
 		args.putBoolean(ARG_KEY_IS_EDIT, true);
 		args.putInt(ARG_KEY_LAYOUT_ID, R.layout.gen_fragment_{{entity.name|cameltounder}}_edit);
@@ -225,7 +238,7 @@ public class DrzavaEditFragment extends AbstractInputFragment {
 		        cursor.getString(cursor.getColumnIndex({{entity.name}}Table.COLUMN_{{attr.name|cameltounder|upper}})), iv_{{attr.name|cameltounder}},
 				ImageUtils.DISPLAY_OPTIONS, new ImageUtils.TagImageViewLoadingListener());
 		{% else %}
-		EditText et_{{attr.name|cameltounder}} = ((EditText) getView().findViewById(R.id.etSifra));
+		EditText et_{{attr.name|cameltounder}} = ((EditText) getView().findViewById(R.id.et_{{attr.name|cameltounder}}));
 		et_{{attr.name|cameltounder}}.setText(cursor.getString(cursor
 				.getColumnIndex({{entity.name}}Table.COLUMN_{{attr.name|cameltounder|upper}})));
 		{% endif %}
@@ -243,7 +256,7 @@ public class DrzavaEditFragment extends AbstractInputFragment {
                 @Override
                 public void onClick(View v) {
                     DialogUtils.showChooseImageLoadDialog(getFragmentManager(),
-                            {{entity.name}}NewFragment.this, REQ_CODE_{{attr.name|cameltounder|upper}}_TAKE_PHOTO,
+                            {{entity.name}}EditFragment.this, REQ_CODE_{{attr.name|cameltounder|upper}}_TAKE_PHOTO,
                             REQ_CODE_{{attr.name|cameltounder|upper}}_CHOOSE_IMAGE);
                 }
             });

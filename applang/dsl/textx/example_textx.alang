@@ -27,7 +27,7 @@ entity NaseljenoMesto ("Naseljeno Mesto") {
 
 entity Firma {
     naziv : string (required, searchable, toString);
-    pib ("PIB") : numeric_string (required, unique);
+    pib ("PIB broj") : numeric_string (required, unique);
     domaca ("Domaća") : bool;
     naseljenoMesto : NaseljenoMesto (required, searchable, viewFromContainer);
     opis : textarea_string (excludeFromList);

@@ -4,7 +4,8 @@
 
     <string name="app_name">{{app_label}}</string>
     {% for entity in entities %}
-    <!-- {{entity.label}} -->
+    <!-- {{entity.name}} -->
+    <string name="ent_{{entity.name|cameltounder}}">{{entity.label}}</string>
     {% for attribute in entity.attributes %}
     <string name="ent_{{entity.name|cameltounder}}_{{attribute.name|cameltounder}}">{{attribute.label}}</string>
     {% if attribute.view_from_container %}

@@ -3,17 +3,26 @@ package {{config.qname}}.fragments;
 
 import android.database.Cursor;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.ImageButton;
 import applang.android.framework.fragments.AbstractDetailsFragment;
 import applang.android.framework.utils.ImageUtils;
+import applang.android.framework.utils.ViewUtils;
+import applang.android.framework.utils.ButtonMethodsUtils;
+import applang.android.framework.utils.DatePickerUtils;
+import applang.android.framework.utils.ImageUtils;
+import applang.android.framework.utils.ViewUtils;
+
 import com.nostra13.universalimageloader.core.ImageLoader;
 import {{config.qname}}.R;
 import {{config.qname}}.content_providers.{{entity.name}}ContentProvider;
 import {{config.qname}}.impl.fragments.{{entity.name}}EditFragmentImpl;
+import {{config.qname}}.impl.fragments.{{entity.name}}DetailsFragmentImpl;
 {% if not entity.name in ref_entity_names %}
 import {{config.qname}}.databases.{{entity.name}}Table;
 {% endif %}
@@ -24,10 +33,11 @@ import {{config.qname}}.databases.{{name}}Table;
 import {{config.qname}}.databases.{{entity_container_name}}Table;
 {% endfor %}
 
+@SuppressWarnings("unused")
 public class {{entity.name}}DetailsFragment extends AbstractDetailsFragment {
 	
 	public static {{entity.name}}DetailsFragment newInstance(Long id) {
-		{{entity.name}}DetailsFragment fragment = new {{entity.name}}DetailsFragment();
+		{{entity.name}}DetailsFragment fragment = new {{entity.name}}DetailsFragmentImpl();
 		Bundle args = new Bundle();
 		args.putInt(ARG_KEY_LAYOUT_ID, R.layout.gen_fragment_{{entity.name|cameltounder}}_details);
 		args.putInt(ARG_KEY_ENTITY_NAME_RES_ID, R.string.ent_{{entity.name|cameltounder}});
@@ -61,7 +71,7 @@ public class {{entity.name}}DetailsFragment extends AbstractDetailsFragment {
 	    {% for attr in entity.attributes %}
 	    {% if attr.primitive_type %}
 	        {% if attr.primitive_type == 'image' %}
-	    Image iv_{{attr.name|cameltounder}} = (ImageView) getView().findViewById(R.id.iv_{{attr.name|cameltounder}});
+	    ImageView iv_{{attr.name|cameltounder}} = (ImageView) getView().findViewById(R.id.iv_{{attr.name|cameltounder}});
 	    ImageLoader.getInstance().displayImage(
 	        cursor.getString(cursor.getColumnIndex({{entity.name}}Table.COLUMN_{{attr.name|cameltounder|upper}})),
 	        iv_{{attr.name|cameltounder}}, ImageUtils.DISPLAY_OPTIONS);
@@ -120,7 +130,7 @@ public class {{entity.name}}DetailsFragment extends AbstractDetailsFragment {
 	        {% else %}
 	    TextView tv_{{attr.name|cameltounder}} = (TextView) getView().findViewById(R.id.tv_{{attr.name|cameltounder}});
 	    tv_{{attr.name|cameltounder}}.setText(cursor.getString(cursor
-	            .getColumnIndex({{entity.name}}.COLUMN_{{attr.name|cameltounder|upper}})));
+	            .getColumnIndex({{entity.name}}Table.COLUMN_{{attr.name|cameltounder|upper}})));
 	        {% endif %}
 	    {% else %}
 	    TextView tv_{{attr.name|cameltounder}} = (TextView) getView().findViewById(R.id.tv_{{attr.name|cameltounder}});

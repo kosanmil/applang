@@ -42,11 +42,11 @@ def generate_android(model, output_folder="../gen/", overwrite_manifest=True, ec
         print_log("Folder for storing generated android applications does not exist. It will be created: {}"
                   .format(android_gen_folder))
         os.makedirs(android_gen_folder)
-    output_folder = android_gen_folder + config.qname + "/"
-    if not os.path.exists(output_folder):
+    output_app_folder = android_gen_folder + config.namespace.replace('.', '/') + "/" + config.app_name + "/"
+    if not os.path.exists(output_app_folder):
         print_log("Folder for storing the generated android application does not exist. It will be created: {}"
                   .format(android_gen_folder))
-        os.makedirs(output_folder)
+        os.makedirs(output_app_folder)
 
     print
     #Checking if the V7 appcompat library exists.
@@ -70,8 +70,8 @@ def generate_android(model, output_folder="../gen/", overwrite_manifest=True, ec
 
     #Framework copying
     print
-    print_log("Copying the app framework to the output folder: {}".format(output_folder))
-    copy_tree(src="../../frameworks/android", dst=output_folder)
+    print_log("Copying the app framework to the output folder: {}".format(output_app_folder))
+    copy_tree(src="../../frameworks/android", dst=android_gen_folder)
     print_log("Finished copying the app framework.")
     print
 
@@ -86,40 +86,52 @@ def generate_android(model, output_folder="../gen/", overwrite_manifest=True, ec
     environment.globals['java_gen_once_comment'] = JAVA_GEN_ONCE_COMMENT
 
     if eclipse_gen or \
-            query_yes_no("Do you want to generate "
-                         "(and possibly overwrite) the eclipse files (.project and .classpath)?"):
+        query_yes_no("Do you want to generate "
+                     "(and possibly overwrite) the eclipse files (.project and .classpath)?"):
         print_log("Generating the eclipse files")
-        copy_file(src="../../frameworks/eclipse_files/.classpath", dst=output_folder)
-        generate_from_template(environment, "dot.project.tmpl", output_folder, ".project",
+        copy_file(src="../../frameworks/eclipse_files/.classpath", dst=output_app_folder)
+        generate_from_template(environment, "dot.project.tmpl", output_app_folder, ".project",
                                config=config)
         print_log("Finished generating the eclipse files")
 
     # AndroidManifest.xml generation
-    generate_overwrite_backup_from_template(environment, "AndroidManifest.tmpl", output_folder,
+    generate_overwrite_backup_from_template(environment, "AndroidManifest.tmpl", output_app_folder,
                                             "AndroidManifest.xml",
                                             overwrite_manifest, config=config, android_specs=android_specs,
-                                            entities=model.entities)
+                                            entities=model.entities,
+                                            has_image=[attr for entity in model.entities for attr in entity.attributes
+                                                       if attr.primitive_type and attr.primitive_type == 'image'])
     # project.properties generation
-    generate_from_template(environment, "project.properties.tmpl", output_folder, "project.properties", 
-                           android_specs=android_specs)
+    generate_from_template(environment, "project.properties.tmpl", output_app_folder, "project.properties",
+                           android_specs=android_specs, namespace_dot_count=config.namespace.count('.'))
+    # res/values folder creation
+    output_gen_values_folder = output_app_folder + "res/values/"
+    if not os.path.exists(output_gen_values_folder):
+        os.makedirs(output_gen_values_folder)
+    # libs folder creation
+    output_gen_libs_folder = output_app_folder + "libs/"
+    if not os.path.exists(output_gen_libs_folder):
+        os.makedirs(output_gen_libs_folder)
+    # assets folder creation
+    output_gen_assets_folder = output_app_folder + "assets/"
+    if not os.path.exists(output_gen_assets_folder):
+        os.makedirs(output_gen_assets_folder)
+
     # gen_string_entities.xml generation
-    generate_from_template(environment, "gen_strings_entities.xml.tmpl", output_folder + "res/values/",
+    generate_from_template(environment, "gen_strings_entities.xml.tmpl", output_gen_values_folder,
                            "gen_strings_entities.xml", 
                            app_label=config.app_label, entities=model.entities)
     # gen_arrays.xml generation
-    generate_from_template(environment, "gen_arrays.xml.tmpl", output_folder + "res/values/",
+    generate_from_template(environment, "gen_arrays.xml.tmpl", output_gen_values_folder,
                            "gen_arrays.xml", 
                            config=config, entities=model.entities)
 
-    output_src_folder = output_folder + "src/" + config.qname.replace(".", "/") + "/"
+    output_src_folder = output_app_folder + "src/" + config.qname.replace(".", "/") + "/"
     if not os.path.exists(output_src_folder):
         os.makedirs(output_src_folder)
 
-    # generate_from_template(environment, "MainActivity.java.tmpl", output_src_folder, "MainActivity.java", 
-    #                        config=config)
-
     # src gen folder creation
-    output_src_gen_folder = output_folder + "src-gen/" + config.qname.replace(".", "/") + "/"
+    output_src_gen_folder = output_app_folder + "src-gen/" + config.qname.replace(".", "/") + "/"
     if not os.path.exists(output_src_gen_folder):
         os.makedirs(output_src_gen_folder)
     # databases folder creation
@@ -138,6 +150,10 @@ def generate_android(model, output_folder="../gen/", overwrite_manifest=True, ec
     output_src_gen_fragments_folder = output_src_gen_folder + "fragments" + "/"
     if not os.path.exists(output_src_gen_fragments_folder):
         os.makedirs(output_src_gen_fragments_folder)
+    # res/layout folder creation
+    output_gen_layout_folder = output_app_folder + "res/layout/"
+    if not os.path.exists(output_gen_layout_folder):
+        os.makedirs(output_gen_layout_folder)
 
     # DatabaseOpenHelper.java
     generate_from_template(environment, "DatabaseOpenHelper.java.tmpl", output_src_gen_databases_folder,
@@ -181,41 +197,41 @@ def generate_android(model, output_folder="../gen/", overwrite_manifest=True, ec
         generate_from_template(environment, "EntityEditFragment.java.tmpl", output_src_gen_fragments_folder,
                                "{}EditFragment.java".format(entity.name),
                                config=config, entity=entity, ref_entity_names=ref_entity_names)
-        generate_from_template(environment, "gen_list_item_entity.xml.tmpl", output_folder + "res/layout/",
+        generate_from_template(environment, "gen_list_item_entity.xml.tmpl", output_gen_layout_folder,
                                "gen_list_item_{}.xml".format(camel_to_under(entity.name)),
                                entity=entity)
-        generate_from_template(environment, "gen_fragment_entity_details.xml.tmpl", output_folder + "res/layout/",
+        generate_from_template(environment, "gen_fragment_entity_details.xml.tmpl", output_gen_layout_folder,
                                "gen_fragment_{}_details.xml".format(camel_to_under(entity.name)),
                                entity=entity, view_container_attrs=view_container_attrs)
-        generate_from_template(environment, "gen_fragment_entity_new.xml.tmpl", output_folder + "res/layout/",
+        generate_from_template(environment, "gen_fragment_entity_new.xml.tmpl", output_gen_layout_folder,
                                "gen_fragment_{}_new.xml".format(camel_to_under(entity.name)),
                                entity=entity)
-        generate_from_template(environment, "gen_fragment_entity_edit.xml.tmpl", output_folder + "res/layout/",
+        generate_from_template(environment, "gen_fragment_entity_edit.xml.tmpl", output_gen_layout_folder,
                                "gen_fragment_{}_edit.xml".format(camel_to_under(entity.name)),
                                entity=entity)
 
     # Generating impl classes ONCE
-    output_src_databases_folder = output_src_folder + "databases" + "/"
-    if not os.path.exists(output_src_databases_folder):
-        os.makedirs(output_src_databases_folder)
-    output_src_fragments_folder = output_src_folder + "fragments" + "/"
-    if not os.path.exists(output_src_fragments_folder):
-        os.makedirs(output_src_fragments_folder)
+    output_src_impl_databases_folder = output_src_folder + "impl/databases" + "/"
+    if not os.path.exists(output_src_impl_databases_folder):
+        os.makedirs(output_src_impl_databases_folder)
+    output_src_impl_fragments_folder = output_src_folder + "impl/fragments" + "/"
+    if not os.path.exists(output_src_impl_fragments_folder):
+        os.makedirs(output_src_impl_fragments_folder)
     # DatabaseOpenHelperImpl.java generate
-    generate_once_from_template(environment, "DatabaseOpenHelperImpl.java.tmpl", output_src_databases_folder,
+    generate_once_from_template(environment, "DatabaseOpenHelperImpl.java.tmpl", output_src_impl_databases_folder,
                                 "DatabaseOpenHelperImpl.java",
                                 config=config)
     for entity in model.entities:
-        generate_once_from_template(environment, "EntityListFragmentImpl.java.tmpl", output_src_fragments_folder,
+        generate_once_from_template(environment, "EntityListFragmentImpl.java.tmpl", output_src_impl_fragments_folder,
                                     "{}ListFragmentImpl.java".format(entity.name),
                                     config=config, entity=entity)
-        generate_once_from_template(environment, "EntityNewFragmentImpl.java.tmpl", output_src_fragments_folder,
+        generate_once_from_template(environment, "EntityNewFragmentImpl.java.tmpl", output_src_impl_fragments_folder,
                                     "{}NewFragmentImpl.java".format(entity.name),
                                     config=config, entity=entity)
-        generate_once_from_template(environment, "EntityEditFragmentImpl.java.tmpl", output_src_fragments_folder,
+        generate_once_from_template(environment, "EntityEditFragmentImpl.java.tmpl", output_src_impl_fragments_folder,
                                     "{}EditFragmentImpl.java".format(entity.name),
                                     config=config, entity=entity)
-        generate_once_from_template(environment, "EntityDetailsFragmentImpl.java.tmpl", output_src_fragments_folder,
+        generate_once_from_template(environment, "EntityDetailsFragmentImpl.java.tmpl", output_src_impl_fragments_folder,
                                     "{}DetailsFragmentImpl.java".format(entity.name),
                                     config=config, entity=entity)
 

@@ -6,7 +6,7 @@ import android.util.Log;
 
 public class {{entity.name}}Table {
 	// Database table
-	public static final String TABLE_NAME = {{entity.name|cameltounder}};
+	public static final String TABLE_NAME = "{{entity.name|cameltounder}}";
 	public static final String COLUMN_ID = "_id";
 	{% for attr in entity.attributes %}
 	{% if attr.primitive_type %}
@@ -33,12 +33,15 @@ public class {{entity.name}}Table {
 			+ COLUMN_ID_{{attr.name|cameltounder|upper}} + " integer "
 			{%- if attr.required %} + " not null " {% endif -%}
 			{%- if attr.unique %} + " unique " {% endif -%}
-			+ ", FOREIGN KEY (" + COLUMN_ID_{{attr.name|cameltounder|upper}} + ") REFERENCES "
-			+ {{attr.reference_type.name}}Table + "(" + {{attr.reference_type.name}}Table.COLUMN_ID + ")"{% endif %}
+			{% endif %}
 			{%- if not loop.last -%}
 			+ ", "
 			{% endif %}
-			{% endfor -%}
+			{% endfor %}
+			{% for attr in entity.attributes if attr.reference_type %}
+			+ ", FOREIGN KEY (" + COLUMN_ID_{{attr.name|cameltounder|upper}} + ") REFERENCES "
+			+ {{attr.reference_type.name}}Table.TABLE_NAME + "(" + {{attr.reference_type.name}}Table.COLUMN_ID + ")"
+			{% endfor %}
 			+ ");";
 
 	public static void onCreate(SQLiteDatabase db) {

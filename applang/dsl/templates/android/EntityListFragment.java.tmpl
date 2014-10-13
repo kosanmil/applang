@@ -6,21 +6,22 @@ import applang.android.framework.fragments.AbstractListFragment;
 import applang.android.framework.fragments.ListSubFragment;
 import {{config.qname}}.R;
 import {{config.qname}}.adapters.{{entity.name}}Adapter;
-import {{config.qname}}.content_providers.FirmaContentProvider;
 {% if not entity.name in ref_entity_names %}
 import {{config.qname}}.databases.{{entity.name}}Table;
 {% endif %}
 {% for name in ref_entity_names %}
 import {{config.qname}}.databases.{{name}}Table;
 {% endfor %}
+import {{config.qname}}.content_providers.{{entity.name}}ContentProvider;
 import {{config.qname}}.impl.fragments.{{entity.name}}DetailsFragmentImpl;
 import {{config.qname}}.impl.fragments.{{entity.name}}EditFragmentImpl;
 import {{config.qname}}.impl.fragments.{{entity.name}}NewFragmentImpl;
+import {{config.qname}}.impl.fragments.{{entity.name}}ListFragmentImpl;
 
 public class {{entity.name}}ListFragment extends AbstractListFragment {
 
 	public static {{entity.name}}ListFragment newInstance() {
-		{{entity.name}}ListFragment fragment = new {{entity.name}}ListFragment();
+		{{entity.name}}ListFragment fragment = new {{entity.name}}ListFragmentImpl();
 		Bundle args = new Bundle();
 		args.putInt(ARG_KEY_ENTITY_NAME_RES_ID, R.string.ent_{{entity.name|cameltounder}});
 		args.putString(ARG_KEY_NEW_FRAG_CLASS_NAME,

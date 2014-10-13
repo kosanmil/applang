@@ -1,5 +1,5 @@
 {{java_gen_comment}}
-package {{config.qname}}.contentProviders;
+package {{config.qname}}.content_providers;
 
 import android.content.ContentProvider;
 import android.content.ContentValues;
@@ -19,17 +19,17 @@ import {{config.qname}}.databases.{{name}}Table;
 
 public class {{entity.name}}ContentProvider extends ContentProvider {
 
-	private DatabaseOpenHelperImpl database;
+	protected DatabaseOpenHelperImpl database;
 
-	private static final int MULTIPLE = 10;
-	private static final int SINGLE = 20;
+	protected static final int MULTIPLE = 10;
+	protected static final int SINGLE = 20;
 
-	private static final String AUTHORITY = "{{config.qname}}.{{entity.name|cameltounder}}_content_provider";
-	private static final String BASE_PATH = "{{entity.name|cameltounder}}";
+	protected static final String AUTHORITY = "{{config.qname}}.{{entity.name|cameltounder}}_content_provider";
+	protected static final String BASE_PATH = "{{entity.name|cameltounder}}";
 	public static final Uri CONTENT_URI = Uri.parse("content://" + AUTHORITY
 			+ "/" + BASE_PATH);
 
-	private static final UriMatcher sURIMatcher = new UriMatcher(
+	protected static final UriMatcher sURIMatcher = new UriMatcher(
 			UriMatcher.NO_MATCH);
 	static {
 		sURIMatcher.addURI(AUTHORITY, BASE_PATH, MULTIPLE);

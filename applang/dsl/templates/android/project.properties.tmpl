@@ -12,4 +12,5 @@
 
 # Project target.
 target=android-{{android_specs.target_version}}
-android.library.reference.1=../appcompat
+android.library.reference.1=../../{% for i in range(namespace_dot_count) %}../{% endfor %}ApplangAndroidFramework
+android.library.reference.2=../../{% for i in range(namespace_dot_count) %}../{% endfor %}appcompat
