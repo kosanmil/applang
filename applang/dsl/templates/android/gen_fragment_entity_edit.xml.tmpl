@@ -6,7 +6,7 @@
     <TableLayout
 		style="@style/Layout.MarginsLeftRightBottom"
         android:shrinkColumns="1" >
-        {% for attr in entity.attributes %}
+        {% for attr in entity.attributes if not attr.readonly %}
         <TableRow>
             <TextView
                 android:id="@+id/tv_{{attr.name|cameltounder}}_label"
