@@ -42,6 +42,9 @@ public class {{entity.name}}Table {
 			+ ", FOREIGN KEY (" + COLUMN_ID_{{attr.name|cameltounder|upper}} + ") REFERENCES "
 			+ {{attr.reference_type.name}}Table.TABLE_NAME + "(" + {{attr.reference_type.name}}Table.COLUMN_ID + ")"
 			{% endfor %}
+			{% for unique_set in entity.unique_sets %}
+			+ ", UNIQUE (" {% for attr in unique_set.attributes %} + COLUMN_{% if attr.reference_type %}ID_{% endif %}{{attr.name|cameltounder|upper}} {% if not loop.last %} + "," {% endif %} {% endfor %} + ")"
+			{% endfor %}
 			+ ");";
 
 	public static void onCreate(SQLiteDatabase db) {

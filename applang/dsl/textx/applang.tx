@@ -16,7 +16,6 @@ Config:
         'start_screen' '=' start_screen=[Entity] ';'
         'platforms' '=' platforms=Platforms ';'
         (android_specs=AndroidSpecs)?
-
     '}'
 ;
 
@@ -37,8 +36,16 @@ Entity:
     'entity' name=FIRST_UPPER_ID
     ('('label=STRING')')?
     '{'
-        attributes+=Attribute
+        'attributes'
+        '{'
+            attributes+=Attribute
+        '}'
+        unique_sets *= UniqueSet
     '}'
+;
+
+UniqueSet:
+    'unique' '(' (attributes += [Attribute])+[','] ')' ';'
 ;
 
 Attribute:

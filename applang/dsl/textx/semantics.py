@@ -97,6 +97,16 @@ def check_semantics(model):
                             "The entity that is reference by a searchable attribute must have a 'toString' attribute, "
                             "\nfrom searchable attribute '{}' in entity '{}'"
                             .format(attr.name, entity.name))
+        # Unique_set check
+        for unique_set in entity.unique_sets:
+            if len(unique_set.attributes) == 1:
+                raise TextXSemanticError("Unique set must contain at least two attributes, in entity {}"
+                                         .format(entity.name))
+            for attr in unique_set.attributes:
+                if attr.name not in [x.name for x in entity.attributes]:
+                    raise TextXSemanticError("Unique set must only contain attributes from the parent entity {}. "
+                                             "Attribute {} does not belong here."
+                                             .format(entity.name, attr.name))
 
 
     return model
