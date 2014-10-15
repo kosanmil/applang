@@ -26,6 +26,7 @@ public class {{entity.name}}ListFragment extends AbstractListFragment {
 		args.putInt(ARG_KEY_ENTITY_NAME_RES_ID, R.string.ent_{{entity.name|cameltounder}});
 		args.putString(ARG_KEY_NEW_FRAG_CLASS_NAME,
 				{{entity.name}}NewFragmentImpl.class.getName());
+		args.putBoolean(ARG_KEY_ACTION_NEW_ENABLED, {{'true' if entity.operations.create else 'false'}});
 		fragment.setArguments(args);
 		return fragment;
 	}
@@ -59,7 +60,9 @@ public class {{entity.name}}ListFragment extends AbstractListFragment {
 				{{entity.name}}ContentProvider.CONTENT_URI.toString(),
 				{{entity.name}}Adapter.class.getName(),
 				{{entity.name}}EditFragmentImpl.class.getName(),
-				{{entity.name}}DetailsFragmentImpl.class.getName());
+				{{entity.name}}DetailsFragmentImpl.class.getName(),
+				{{'true' if entity.operations.edit else 'false'}},
+				{{'true' if entity.operations.delete else 'false'}});
 	}
 
 	@Override

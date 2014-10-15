@@ -13,5 +13,7 @@
         <item>{{config.qname}}.impl.fragments.{{entity.name}}ListFragmentImpl</item>
     {% endfor %}
     </string-array>
-
+    {% if config.start_screen %}
+    <item name="nav_drawer_default_position" type="integer">{{entities.index(config.start_screen)}}</item>
+    {% endif %}
 </resources>

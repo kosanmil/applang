@@ -32,8 +32,6 @@ public class BaseActivity extends ActionBarActivity {
 	private ListView mDrawerList;
 	private ActionBarDrawerToggle mDrawerToggle;
 	private CharSequence mTitle = "Naslov projekta";
-	
-	private static final int INITIAL_FRAGMENT_POSITION = 0;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -72,7 +70,8 @@ public class BaseActivity extends ActionBarActivity {
 		mDrawerLayout.setDrawerListener(mDrawerToggle);
 
 		if (savedInstanceState == null) {
-			selectItem(INITIAL_FRAGMENT_POSITION, getResources().getStringArray(R.array.nav_drawer_tags)[INITIAL_FRAGMENT_POSITION]);
+			int position = getResources().getInteger(R.integer.nav_drawer_default_position);
+			selectItem(position, getResources().getStringArray(R.array.nav_drawer_tags)[position]);
 		}
 		getSupportActionBar().setTitle(mTitle);
 		getSupportActionBar().setDisplayHomeAsUpEnabled(true);

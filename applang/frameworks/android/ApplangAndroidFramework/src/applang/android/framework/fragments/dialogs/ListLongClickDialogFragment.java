@@ -1,5 +1,8 @@
 package applang.android.framework.fragments.dialogs;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
@@ -16,10 +19,6 @@ public class ListLongClickDialogFragment extends DialogFragment {
 	private static final String ARG_KEY_TITLE = "title";
 	private static final String ARG_KEY_ID = "id";
 
-	private static final int WHICH_INDEX_DETAILS = 0;
-	private static final int WHICH_INDEX_EDIT = 1;
-	private static final int WHICH_INDEX_DELETE = 2;
-
 	public static ListLongClickDialogFragment newInstance(String title, Long id) {
 		ListLongClickDialogFragment fragment = new ListLongClickDialogFragment();
 		Bundle args = new Bundle();
@@ -32,38 +31,47 @@ public class ListLongClickDialogFragment extends DialogFragment {
 	@Override
 	public Dialog onCreateDialog(Bundle savedInstanceState) {
 		// TODO Auto-generated method stub
-		String[] mDialogItemTexts = new String[] {
-				getResources().getString(R.string.action_details),
-				getResources().getString(R.string.action_edit),
-				getResources().getString(R.string.action_delete) };
-		Integer[] images = new Integer[] {
-				R.drawable.ic_action_next_item,
-				R.drawable.ic_action_edit_dark,
-				R.drawable.ic_action_discard_dark };
+		ListSubFragment targetFragment = (ListSubFragment) getTargetFragment();
+		final List<String> dialogItemTexts = new ArrayList<String>();
+		List<Integer> images = new ArrayList<Integer>();
+		dialogItemTexts.add(getResources().getString(R.string.action_details));
+		images.add(R.drawable.ic_action_next_item);
+		if(targetFragment.getArguments().getBoolean(ListSubFragment.ARG_KEY_ACTION_EDIT_ENABLED, true)){
+			dialogItemTexts.add(getResources().getString(R.string.action_edit));
+			images.add(R.drawable.ic_action_edit_dark);
+		}
+		if(targetFragment.getArguments().getBoolean(ListSubFragment.ARG_KEY_ACTION_DELETE_ENABLED, true)){
+			dialogItemTexts.add(getResources().getString(R.string.action_delete));
+			images.add(R.drawable.ic_action_discard_dark);
+		}
 		AlertDialog dialog = new AlertDialog.Builder(getActivity())
 				.setTitle(getArguments().getString(ARG_KEY_TITLE))
-				.setAdapter(new ArrayAdapterWithIcon(getActivity(), mDialogItemTexts, images), new OnClickListener() {
+				.setAdapter(new ArrayAdapterWithIcon(getActivity(), dialogItemTexts, images), new OnClickListener() {
 
 					@Override
 					public void onClick(DialogInterface dialog, int which) {
 						// TODO Auto-generated method stub
 						ListSubFragment targetFragment = (ListSubFragment) getTargetFragment();
 						Long id = getArguments().getLong(ARG_KEY_ID);
-						switch (which) {
-						case WHICH_INDEX_DETAILS:
-							targetFragment.openDetails(id);
-							break;
-						case WHICH_INDEX_EDIT:
-							targetFragment.openEdit(id);
-							break;
-						case WHICH_INDEX_DELETE:
-							targetFragment.confirmDelete(id);
-							break;
-						default:
+						if (which >= dialogItemTexts.size()){
 							Log.w(ListLongClickDialogFragment.class
 									.getCanonicalName(),
 									"Accessed a 'which' index that should not exist! : "
 											+ which);
+							return;
+						}
+						String selectedDialogItem = dialogItemTexts.get(which);
+						if (selectedDialogItem.equals(getResources().getString(R.string.action_details))){
+							targetFragment.openDetails(id);
+							return;
+						}
+						else if (selectedDialogItem.equals(getResources().getString(R.string.action_edit))){
+							targetFragment.openEdit(id);
+							return;
+						}
+						else if (selectedDialogItem.equals(getResources().getString(R.string.action_delete))){
+							targetFragment.confirmDelete(id);
+							return;
 						}
 					}
 				})

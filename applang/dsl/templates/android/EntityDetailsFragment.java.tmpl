@@ -41,6 +41,8 @@ public class {{entity.name}}DetailsFragment extends AbstractDetailsFragment {
 		Bundle args = new Bundle();
 		args.putInt(ARG_KEY_LAYOUT_ID, R.layout.gen_fragment_{{entity.name|cameltounder}}_details);
 		args.putInt(ARG_KEY_ENTITY_NAME_RES_ID, R.string.ent_{{entity.name|cameltounder}});
+		args.putBoolean(ARG_KEY_ACTION_EDIT_ENABLED, {{'true' if entity.operations.edit else 'false'}});
+		args.putBoolean(ARG_KEY_ACTION_DELETE_ENABLED, {{'true' if entity.operations.delete else 'false'}});
 		args.putString(ARG_KEY_CONTENT_URI_STRING,
 				{{entity.name}}ContentProvider.CONTENT_URI.toString());
 

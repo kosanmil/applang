@@ -31,7 +31,7 @@ public abstract class AbstractListFragment extends AbstractFragment implements
 	public static final String ARG_KEY_FILTER_COLUMN_NAME = "filter_column_name";
 	public static final String ARG_KEY_FILTER_VALUE = "filter_column_value";
 	
-//	public static final String STATE_KEY_LISTVIEW_STATE = "stateListViewState";
+	public static final String ARG_KEY_ACTION_NEW_ENABLED = "action_new_enabled";
 
 	protected ListView mListView;
 	protected CursorAdapter mAdapter;
@@ -98,6 +98,11 @@ public abstract class AbstractListFragment extends AbstractFragment implements
 						return true;
 					}
 				});
+		if (!this.getArguments().getBoolean(ARG_KEY_ACTION_NEW_ENABLED, true)){
+			MenuItem actionNew = menu.findItem(R.id.action_new);
+			actionNew.setVisible(false);
+			actionNew.setEnabled(false);
+		}
 		super.onCreateOptionsMenu(menu, inflater);
 	}
 

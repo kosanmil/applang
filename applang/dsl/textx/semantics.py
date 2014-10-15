@@ -52,6 +52,11 @@ def check_semantics(model):
             android_specs.target_version = DEF_ANDROID_TARGET_VER
         if android_specs.min_version > android_specs.target_version:
             raise TextXSemanticError('In Android Specs: Minimum version cannot be greater than the target version')
+    if model.config.start_screen:
+        if not model.config.start_screen.operations.listall:
+            raise TextXSemanticError("Start screen must be an entity that has the 'listall' operation, "
+                                     "start screen entity = '{}'"
+                                     .format(model.config.start_screen.name))
 
     if not model.entities:
         raise TextXSemanticError('At least one entity is required')
@@ -107,7 +112,6 @@ def check_semantics(model):
                     raise TextXSemanticError("Unique set must only contain attributes from the parent entity {}. "
                                              "Attribute {} does not belong here."
                                              .format(entity.name, attr.name))
-
 
     return model
 

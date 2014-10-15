@@ -7,8 +7,7 @@
     
     <string-array name="nav_drawer_tags">
     </string-array>
-    
-    
- 
+
+    <item name="nav_drawer_default_position" type="integer">0</item>
 
 </resources>

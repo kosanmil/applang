@@ -25,6 +25,9 @@ public abstract class AbstractDetailsFragment extends AbstractFragment {
 	public static final String ARG_KEY_PROJECTION = "arg_projection";
 	public static final String ARG_KEY_EDIT_FRAG_CLASS_NAME = "arg_editFragClassName";
 
+	public static final String ARG_KEY_ACTION_EDIT_ENABLED = "action_edit_enabled";
+	public static final String ARG_KEY_ACTION_DELETE_ENABLED = "action_delete_enabled";
+	
 	protected Long mEntityId;
 
 	@Override
@@ -79,6 +82,16 @@ public abstract class AbstractDetailsFragment extends AbstractFragment {
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
 		inflater.inflate(R.menu.details_menu, menu);
+		if (!this.getArguments().getBoolean(ARG_KEY_ACTION_EDIT_ENABLED, true)){
+			MenuItem actionEdit = menu.findItem(R.id.action_edit);
+			actionEdit.setVisible(false);
+			actionEdit.setEnabled(false);
+		}
+		if (!this.getArguments().getBoolean(ARG_KEY_ACTION_DELETE_ENABLED, true)){
+			MenuItem actionDelete = menu.findItem(R.id.action_delete);
+			actionDelete.setVisible(false);
+			actionDelete.setEnabled(false);
+		}
 		super.onCreateOptionsMenu(menu, inflater);
 	}
 

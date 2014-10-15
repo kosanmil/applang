@@ -124,7 +124,7 @@ def generate_android(model, output_folder="../gen/", overwrite_manifest=True, ec
     # gen_arrays.xml generation
     generate_from_template(environment, "gen_arrays.xml.tmpl", output_gen_values_folder,
                            "gen_arrays.xml", 
-                           config=config, entities=model.entities)
+                           config=config, entities=[entity for entity in model.entities if entity.operations.listall])
 
     output_src_folder = output_app_folder + "src/" + config.qname.replace(".", "/") + "/"
     if not os.path.exists(output_src_folder):

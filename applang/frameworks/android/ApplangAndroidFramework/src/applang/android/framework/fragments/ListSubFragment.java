@@ -38,6 +38,9 @@ public class ListSubFragment extends AbstractFragment implements
 	//Loader manager args
 	public static final String LOADER_ARG_KEY_SELECTION = "loader_selection";
 	public static final String LOADER_ARG_KEY_SELECTION_ARGS = "loader_selection_args";
+
+	public static final String ARG_KEY_ACTION_EDIT_ENABLED = "action_edit_enabled";
+	public static final String ARG_KEY_ACTION_DELETE_ENABLED = "action_delete_enabled";
 	
 	//Filter args that aren't in the usual newInstance method
 	public static final String ARG_KEY_FILTER_COLUMN_NAME = "filter_column_name";
@@ -59,6 +62,19 @@ public class ListSubFragment extends AbstractFragment implements
 		args.putString(ARG_KEY_LIST_ADAPTER_CLASS_NAME, adapterClassName);
 		args.putString(ARG_KEY_EDIT_FRAG_CLASS_NAME, editFragClassName);
 		args.putString(ARG_KEY_DETAILS_FRAG_CLASS_NAME, detailsFragClassName);
+		fragment.setArguments(args);
+		return fragment;
+		
+	}
+	
+	public static ListSubFragment newInstance(int entityNameResId, 
+			String[] projection, String contentUri, String adapterClassName, 
+			String editFragClassName, String detailsFragClassName,
+			boolean editEnabled, boolean deleteEnabled){
+		ListSubFragment fragment = newInstance(entityNameResId, projection, contentUri, adapterClassName, editFragClassName, detailsFragClassName);
+		Bundle args = fragment.getArguments();
+		args.putBoolean(ARG_KEY_ACTION_EDIT_ENABLED, editEnabled);
+		args.putBoolean(ARG_KEY_ACTION_DELETE_ENABLED, deleteEnabled);
 		fragment.setArguments(args);
 		return fragment;
 		

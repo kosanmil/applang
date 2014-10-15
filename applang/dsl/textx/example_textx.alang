@@ -11,6 +11,7 @@ config {
 }
 
 entity Drzava ("Država") {
+    operations(listall, create);
     attributes
     {
         sifra ("Šifra"):
@@ -25,6 +26,7 @@ entity Drzava ("Država") {
 }
 
 entity NaseljenoMesto ("Naseljeno Mesto") {
+    operations(edit, delete);
     attributes
     {
         naziv:
@@ -47,6 +49,7 @@ entity NaseljenoMesto ("Naseljeno Mesto") {
 }
 
 entity Firma {
+    operations(listall, create, edit, delete);
     attributes
     {
         naziv:

@@ -93,9 +93,18 @@ public class {{entity.name}}EditFragment extends AbstractInputFragment {
 					, {{attr.reference_type.name}}Table.TABLE_NAME + "." + {{attr.reference_type.name}}Table.COLUMN_{{attr.reference_type.to_string.name|cameltounder|upper}}
 					{% endif %}
 			};
+			{% if attr.reference_type.name == entity.name %}
+			//Cannnot reference itself
+			String selection = {{attr.reference_type.name}}Table.TABLE_NAME + "." + {{attr.reference_type.name}}Table.COLUMN_ID + " != ?";
+			String selectionArgs[] = {mEntityId.toString()};
+			Cursor cursorEntity = getActivity().getContentResolver().query(
+					{{attr.reference_type.name}}ContentProvider.CONTENT_URI, projection, selection,
+					selectionArgs, null);
+			{% else %}
 			Cursor cursorEntity = getActivity().getContentResolver().query(
 					{{attr.reference_type.name}}ContentProvider.CONTENT_URI, projection, null, null,
 					null);
+			{% endif %}
 			MatrixCursor cursorExtras = new MatrixCursor(new String[] { "_id"
 			        {% if attr.reference_type.to_string %}
 			        , {{attr.reference_type.name}}Table.COLUMN_{{attr.reference_type.to_string.name|cameltounder|upper}}

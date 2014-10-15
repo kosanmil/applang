@@ -13,7 +13,7 @@ Config:
         ('app_label' '=' app_label=STRING ';')?
         'namespace' '=' namespace=QNAME ';'
         'db_version' '=' db_version=INT ';'
-        'start_screen' '=' start_screen=[Entity] ';'
+        ('start_screen' '=' start_screen=[Entity] ';')?
         'platforms' '=' platforms=Platforms ';'
         (android_specs=AndroidSpecs)?
     '}'
@@ -36,12 +36,25 @@ Entity:
     'entity' name=FIRST_UPPER_ID
     ('('label=STRING')')?
     '{'
+        operations = Operations
         'attributes'
         '{'
             attributes+=Attribute
         '}'
         unique_sets *= UniqueSet
     '}'
+;
+
+Operations:
+    'operations'
+    '('
+        ( (listall?='listall')
+          |(create?='create')
+          |(edit?='edit')
+          |(delete?='delete')
+        )*[',']
+    ')'
+    ';'
 ;
 
 UniqueSet:
