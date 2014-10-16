@@ -11,7 +11,10 @@ from dsl.utils import generate_from_template, generate_once_from_template, \
 from dsl.textx.semantics import TYPE_TEXT_IN_DB, TYPE_INT_IN_DB, TYPE_REAL_IN_DB
 
 
-def generate_android(model, output_folder="../gen/", overwrite_manifest=True, eclipse_gen=True):
+package_directory = os.path.dirname(os.path.abspath(__file__))
+
+
+def gen_android(model, output_folder, overwrite_manifest=True, eclipse_gen=True):
     """
     Generate the android application with the applang parser that contains the model.
     :param parser: The parser which was used to parse the applang language
@@ -37,46 +40,41 @@ def generate_android(model, output_folder="../gen/", overwrite_manifest=True, ec
                                 .format(android_specs.sdk_path))
 
     #Checking if the output folder exists. If it doesn't, creates it.
-    android_gen_folder = output_folder + "/android/"
+    android_gen_folder = os.path.join(output_folder, "android", '')
     if not os.path.exists(android_gen_folder):
         print_log("Folder for storing generated android applications does not exist. It will be created: {}"
-                  .format(android_gen_folder))
+                  .format(os.path.abspath(android_gen_folder)))
         os.makedirs(android_gen_folder)
-    output_app_folder = android_gen_folder + config.namespace.replace('.', '/') + "/" + config.app_name + "/"
+    output_app_folder = os.path.join(android_gen_folder, config.namespace.replace('.', '/'), config.app_name, '')
     if not os.path.exists(output_app_folder):
         print_log("Folder for storing the generated android application does not exist. It will be created: {}"
-                  .format(android_gen_folder))
+                  .format(os.path.abspath(android_gen_folder)))
         os.makedirs(output_app_folder)
-
+    print_log('App folder: {}'.format(os.path.abspath(android_gen_folder)))
     print
     #Checking if the V7 appcompat library exists.
     #If it doesn't, copies it from the Android SDK.
-    if os.path.exists(android_gen_folder + "appcompat/"):
-        print_log("Appcompat library exists. No need to copy it from the android SDK.")
+    output_appcompat_folder = os.path.join(android_gen_folder, 'appcompat', '')
+    if os.path.exists(output_appcompat_folder):
+        print_log("Appcompat library exists in {}. No need to copy it from the android SDK."
+                  .format(os.path.abspath(output_appcompat_folder)))
     else:
-        print_log("Appcompat does not exist in the generated folder. Copying in from the android SDK.")
-        copy_tree(src=android_specs.sdk_path + PATH_APPCOMPAT_V7, dst=android_gen_folder + "appcompat/")
-
-    #Checking if the Google Play Services library (needed for Google maps) exists.
-    #If it doesn't, copies it from the Android SDK.
-    # if os.path.exists(android_gen_folder + "google-play-services_lib/"):
-    #     print_log("Google Play Services library exists. No need to copy it from the android SDK.")
-    # else:
-    #     print_log("Google Play Services library does not exist in the generated folder. "
-    #               "Copying in from the android SDK.")
-    #     copy_tree(src=android_specs.sdk_path + PATH_GOOGLE_PLAY,
-    #               dst=android_gen_folder + "google-play-services_lib/")
-
+        print_log("Appcompat does not exist in the generated folder. Copying in from the android SDK to {}"
+                  .format(os.path.abspath(output_appcompat_folder)))
+        copy_tree(src=android_specs.sdk_path + PATH_APPCOMPAT_V7, dst=output_appcompat_folder)
 
     #Framework copying
+    frameworks_folder = os.path.join(package_directory, os.pardir, os.pardir, "frameworks", "")
     print
-    print_log("Copying the app framework to the output folder: {}".format(output_app_folder))
-    copy_tree(src="../../frameworks/android", dst=android_gen_folder)
+    print_log("Copying the app framework to the output folder: {}".format(os.path.abspath(output_app_folder)))
+    copy_tree(src=os.path.join(frameworks_folder, "android"),
+              dst=android_gen_folder)
     print_log("Finished copying the app framework.")
     print
 
     #File generation
-    environment = Environment(loader=FileSystemLoader('../templates/android'))
+    environment = Environment(loader=FileSystemLoader(
+                              os.path.join(package_directory, os.pardir, 'templates', 'android')))
     environment.filters['cameltounder'] = camel_to_under
     environment.trim_blocks = True
     environment.lstrip_blocks = True
@@ -89,7 +87,7 @@ def generate_android(model, output_folder="../gen/", overwrite_manifest=True, ec
         query_yes_no("Do you want to generate "
                      "(and possibly overwrite) the eclipse files (.project and .classpath)?"):
         print_log("Generating the eclipse files")
-        copy_file(src="../../frameworks/eclipse_files/.classpath", dst=output_app_folder)
+        copy_file(src=os.path.join(frameworks_folder, 'eclipse_files', '.classpath'), dst=output_app_folder)
         generate_from_template(environment, "dot.project.tmpl", output_app_folder, ".project",
                                config=config)
         print_log("Finished generating the eclipse files")
@@ -105,15 +103,15 @@ def generate_android(model, output_folder="../gen/", overwrite_manifest=True, ec
     generate_from_template(environment, "project.properties.tmpl", output_app_folder, "project.properties",
                            android_specs=android_specs, namespace_dot_count=config.namespace.count('.'))
     # res/values folder creation
-    output_gen_values_folder = output_app_folder + "res/values/"
+    output_gen_values_folder = os.path.join(output_app_folder, 'res', 'values', '')
     if not os.path.exists(output_gen_values_folder):
         os.makedirs(output_gen_values_folder)
     # libs folder creation
-    output_gen_libs_folder = output_app_folder + "libs/"
+    output_gen_libs_folder = os.path.join(output_app_folder, 'libs', '')
     if not os.path.exists(output_gen_libs_folder):
         os.makedirs(output_gen_libs_folder)
     # assets folder creation
-    output_gen_assets_folder = output_app_folder + "assets/"
+    output_gen_assets_folder = os.path.join(output_app_folder, 'assets', '')
     if not os.path.exists(output_gen_assets_folder):
         os.makedirs(output_gen_assets_folder)
 
@@ -126,32 +124,32 @@ def generate_android(model, output_folder="../gen/", overwrite_manifest=True, ec
                            "gen_arrays.xml", 
                            config=config, entities=[entity for entity in model.entities if entity.operations.listall])
 
-    output_src_folder = output_app_folder + "src/" + config.qname.replace(".", "/") + "/"
+    output_src_folder = os.path.dirname(os.path.join(output_app_folder, 'src', config.qname.replace(".", "/"), ''))
     if not os.path.exists(output_src_folder):
         os.makedirs(output_src_folder)
 
     # src gen folder creation
-    output_src_gen_folder = output_app_folder + "src-gen/" + config.qname.replace(".", "/") + "/"
+    output_src_gen_folder = os.path.join(output_app_folder, 'src-gen', config.qname.replace(".", "/"), '')
     if not os.path.exists(output_src_gen_folder):
         os.makedirs(output_src_gen_folder)
     # databases folder creation
-    output_src_gen_databases_folder = output_src_gen_folder + "databases" + "/"
+    output_src_gen_databases_folder = os.path.join(output_src_gen_folder, 'databases', '')
     if not os.path.exists(output_src_gen_databases_folder):
         os.makedirs(output_src_gen_databases_folder)
     # content_providers folder creation
-    output_src_gen_content_providers_folder = output_src_gen_folder + "content_providers" + "/"
+    output_src_gen_content_providers_folder = os.path.join(output_src_gen_folder, 'content_providers', '')
     if not os.path.exists(output_src_gen_content_providers_folder):
         os.makedirs(output_src_gen_content_providers_folder)
     # adapters folder creation
-    output_src_gen_adapters_folder = output_src_gen_folder + "adapters" + "/"
+    output_src_gen_adapters_folder = os.path.join(output_src_gen_folder, 'adapters', '')
     if not os.path.exists(output_src_gen_adapters_folder):
         os.makedirs(output_src_gen_adapters_folder)
     # fragments folder creation
-    output_src_gen_fragments_folder = output_src_gen_folder + "fragments" + "/"
+    output_src_gen_fragments_folder = os.path.join(output_src_gen_folder, 'fragments', '')
     if not os.path.exists(output_src_gen_fragments_folder):
         os.makedirs(output_src_gen_fragments_folder)
     # res/layout folder creation
-    output_gen_layout_folder = output_app_folder + "res/layout/"
+    output_gen_layout_folder = os.path.join(output_app_folder, 'res', 'layout', '')
     if not os.path.exists(output_gen_layout_folder):
         os.makedirs(output_gen_layout_folder)
 
@@ -211,10 +209,10 @@ def generate_android(model, output_folder="../gen/", overwrite_manifest=True, ec
                                entity=entity)
 
     # Generating impl classes ONCE
-    output_src_impl_databases_folder = output_src_folder + "impl/databases" + "/"
+    output_src_impl_databases_folder = os.path.join(output_src_folder, 'impl', 'databases', '')
     if not os.path.exists(output_src_impl_databases_folder):
         os.makedirs(output_src_impl_databases_folder)
-    output_src_impl_fragments_folder = output_src_folder + "impl/fragments" + "/"
+    output_src_impl_fragments_folder = os.path.join(output_src_folder, 'impl', 'fragments', '')
     if not os.path.exists(output_src_impl_fragments_folder):
         os.makedirs(output_src_impl_fragments_folder)
     # DatabaseOpenHelperImpl.java generate
@@ -236,5 +234,5 @@ def generate_android(model, output_folder="../gen/", overwrite_manifest=True, ec
                                     config=config, entity=entity)
 
     print
-    print_log("Finished generating the ANDROID application")
+    print_log("Finished generating the ANDROID application in {}".format(os.path.abspath(android_gen_folder)))
     print

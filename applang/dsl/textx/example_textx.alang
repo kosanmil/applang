@@ -1,85 +1,86 @@
 config {
-    app_name = MasterGenerated;
-    app_label = "Master Generated";
-    namespace = master;
-    db_version = 3;
-    start_screen = Drzava;
-    platforms = android, ios;
-    android_specs = {
-        sdk_path = "/home/kosan/software/android-sdk-linux";
+    app_name = MasterGenerated
+    app_label = "Master Generated"
+    namespace = master
+    db_version = 3
+    start_screen = Drzava
+    platforms = android, ios
+    android_specs
+    {
+        sdk_path = "/home/kosan/software/android-sdk-linux"
     }
 }
 
 entity Drzava ("Država") {
-    operations(listall, create);
+    operations(listall, create)
     attributes
     {
         sifra ("Šifra"):
-            string(required, unique, searchable, readonly);
+            string(required, unique, searchable, readonly)
 
         naziv:
-            string(required, unique, searchable, toString);
+            string(required, unique, searchable, toString)
 
         zastava:
-            image;
+            image
     }
 }
 
 entity NaseljenoMesto ("Naseljeno Mesto") {
-    operations(edit, delete);
+    operations(edit, delete)
     attributes
     {
         naziv:
-            string(required, searchable, toString);
+            string(required, searchable, toString)
 
         postCode ("Poštanski kod"):
-            numeric_string(required);
+            numeric_string(required)
 
         drzava ("Država"):
-            Drzava(required, searchable, viewFromContainer);
+            Drzava(required, searchable, viewFromContainer)
 
         drugaDrzava ("Druga država"):
-            Drzava (viewFromContainer);
+            Drzava (viewFromContainer)
 
         brojStanovnika ("Broj stanovnika"):
-            int;
+            int
     }
-    unique(naziv, drzava);
-    unique(postCode, drugaDrzava);
+    unique(naziv, drzava)
+    unique(postCode, drugaDrzava)
 }
 
 entity Firma {
-    operations(listall, create, edit, delete);
+    operations(listall, create, edit, delete)
     attributes
     {
         naziv:
-            string (required, searchable, toString ,readonly);
+            string (required, searchable, toString ,readonly)
 
         pib ("PIB broj"):
-            numeric_string (required, unique);
+            numeric_string (required, unique)
 
         domaca ("Domaća"):
-            bool (readonly);
+            bool (readonly)
 
         naseljenoMesto:
-            NaseljenoMesto (required, searchable, viewFromContainer);
+            NaseljenoMesto (required, searchable, viewFromContainer)
 
         opis:
-            textarea_string (excludeFromList, readonly);
+            textarea_string (excludeFromList, readonly)
 
         nadFirma:
-            Firma (viewFromContainer);
+            Firma (viewFromContainer)
 
         telefon:
-            telephone_type (excludeFromList);
+            telephone_type (excludeFromList)
 
         datumOsnivanja:
-            date (excludeFromList);
+            date (excludeFromList)
 
         adresa:
-            address_type (excludeFromList);
+            address_type (excludeFromList)
 
         vrednostFirme ("Vrednost firme"):
-            float;
+            float
     }
 }

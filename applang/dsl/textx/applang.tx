@@ -9,12 +9,12 @@ ApplangModel:
 
 Config:
     'config' '{'
-        'app_name' '=' app_name=ID ';'
-        ('app_label' '=' app_label=STRING ';')?
-        'namespace' '=' namespace=QNAME ';'
-        'db_version' '=' db_version=INT ';'
-        ('start_screen' '=' start_screen=[Entity] ';')?
-        'platforms' '=' platforms=Platforms ';'
+        'app_name' '=' app_name=ID
+        ('app_label' '=' app_label=STRING)?
+        'namespace' '=' namespace=QNAME
+        'db_version' '=' db_version=INT
+        ('start_screen' '=' start_screen=[Entity])?
+        'platforms' '=' platforms=Platforms
         (android_specs=AndroidSpecs)?
     '}'
 ;
@@ -24,10 +24,10 @@ Platforms:
 ;
 
 AndroidSpecs:
-    'android_specs' '=' '{'
-        (   ('sdk_path' '=' sdk_path=STRING ';')
-            |('min_version' '=' min_version=INT ';')
-            |('target_version' '=' target_version=INT ';')
+    'android_specs' '{'
+        (   ('sdk_path' '=' sdk_path=STRING)
+            |('min_version' '=' min_version=INT)
+            |('target_version' '=' target_version=INT)
         )*
     '}'
 ;
@@ -54,11 +54,10 @@ Operations:
           |(delete?='delete')
         )*[',']
     ')'
-    ';'
 ;
 
 UniqueSet:
-    'unique' '(' (attributes += [Attribute])+[','] ')' ';'
+    'unique' '(' (attributes += [Attribute])+[','] ')'
 ;
 
 Attribute:
@@ -78,79 +77,11 @@ Attribute:
          )*[',']
     ')'
     )?
-    ';'
 ;
 
 PrimitiveType:
     'int'|'string'|'numeric_string'|'textarea_string'|'float'|'bool'|'date'|'image'|'telephone_type'|'address_type'
 ;
-
-/*
-INT_TYPE:
-    name='int'
-;
-
-STRING_TYPE:
-    name='string'
-;
-
-NUMERIC_STRING_TYPE:
-    name='numeric_string'
-;
-
-TEXTAREA_STRING_TYPE:
-    name='textarea_string'
-;
-
-FLOAT_TYPE:
-    name='float'
-;
-
-BOOL_TYPE:
-    name='bool'
-;
-
-DATE_TYPE:
-    name='date'
-;
-
-IMAGE_TYPE:
-    name='image'
-;
-
-TELEPHONE_TYPE:
-    name='telephone_type'
-;
-
-ADDRESS_TYPE:
-    name='address_type'
-;
-*/
-
-/*
-Workflow:
-
-  'workflow' name=ID (desc=STRING)?
-  'init' init=[Task]
-
-  tasks *= Task
-
-  actions *= Action
-
-;
-
-Task:
-  'task' name=ID '{'
-    (('entry' entry=[Action])|
-    ('leave' leave=[Action])|
-    ('next' next+=[Task][',']))*
-  '}'
-;
-
-Action:
-  'action' name=ID
-;
-*/
 
 QNAME:
     /([a-z_][a-z\d_]*\.)*[a-z_][a-z\d_]*/

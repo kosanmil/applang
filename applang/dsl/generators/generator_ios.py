@@ -1,7 +1,7 @@
 from dsl.applang_exceptions import UnimplementedPlatformException
 
 
-def generate_ios(model, output_folder="../gen/", overwrite_all = True):
+def gen_ios(model, output_folder, overwrite_all = True):
     """
     Generate the ios application with the applang parser that contains the model.
     :param parser: The parser which was used to parse the applang language
