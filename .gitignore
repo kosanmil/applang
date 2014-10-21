@@ -4,6 +4,8 @@
 *.dot
 *.pyc
 gen/
+dist/
+*egg-info/
 
 #Android
 

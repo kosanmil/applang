@@ -1,0 +1,4 @@
+include applang/applang.tx
+exclude old_dsl *.*
+recursive-include applang/templates *.tmpl
+recursive-include applang/frameworks *.*

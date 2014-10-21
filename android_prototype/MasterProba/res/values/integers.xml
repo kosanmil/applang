@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <item name="grid_view_columns_number" type="integer">1</item>
-    <item name="image_view_size_details" type="integer">128</item>
-    <item name="image_view_size_input" type="integer">64</item>
-</resources>
