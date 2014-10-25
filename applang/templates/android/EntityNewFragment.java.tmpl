@@ -254,6 +254,30 @@ public class {{entity.name}}NewFragment extends AbstractInputFragment {
 	{% endfor %}
 	}
 
+	{% for attr in entity.attributes if attr.primitive_type and attr.primitive_type == 'image' %}
+	{% if loop.first %}
+	@Override
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+		if(resultCode != Activity.RESULT_OK){
+			super.onActivityResult(requestCode, resultCode, data);
+			return;
+		}
+	{% endif %}
+		if(requestCode == REQ_CODE_{{attr.name|cameltounder|upper}}_TAKE_PHOTO || requestCode == REQ_CODE_{{attr.name|cameltounder|upper}}_CHOOSE_IMAGE){
+			Uri selectedImage = data.getData();
+			ImageView imageView = (ImageView) getView().findViewById(R.id.iv_{{attr.name|cameltounder}});
+			ImageLoader.getInstance().displayImage(selectedImage != null ? selectedImage.toString() : null, imageView,
+					ImageUtils.DISPLAY_OPTIONS, new ImageUtils.TagImageViewLoadingListener());
+		}
+	{% if loop.last %}
+		else {
+			super.onActivityResult(requestCode, resultCode, data);
+		}
+	}
+	{% endif %}
+	{% endfor %}
+
+
     {% for attr in entity.attributes if attr.primitive_type and attr.primitive_type == 'image' %}
 	{% if loop.first %}
 	@Override

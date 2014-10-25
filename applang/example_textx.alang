@@ -12,7 +12,7 @@ config {
 }
 
 entity Drzava ("Država") {
-    operations(listall, create)
+    operations(listall, create, edit)
     attributes
     {
         sifra ("Šifra"):
