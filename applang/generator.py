@@ -54,5 +54,5 @@ def gen_apps_from_textx_file(file_path, output_folder,
         print_log("Time needed: {} seconds.".format(time_diff.seconds))
 
 if __name__ == "__main__":
-    gen_apps_from_textx_file("example_textx.alang", os.path.join(os.path.pardir, 'gen'),
+    gen_apps_from_textx_file("example_textx.alang", os.path.join(os.path.pardir, 'gen/novipath'),
                                   overwrite_manifest=True, eclipse_gen=True)

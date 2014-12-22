@@ -1,6 +1,6 @@
 config {
-    app_name = MasterGenerated
-    app_label = "Master Generated"
+    app_name = MasterGenNoAltCode
+    app_label = "Master Gen No Altered Code"
     namespace = master
     db_version = 3
     start_screen = Drzava
@@ -12,7 +12,7 @@ config {
 }
 
 entity Drzava ("Država") {
-    operations(listall, create, edit)
+    operations(listall, create, edit, delete)
     attributes
     {
         sifra ("Šifra"):
@@ -27,7 +27,7 @@ entity Drzava ("Država") {
 }
 
 entity NaseljenoMesto ("Naseljeno Mesto") {
-    operations(edit, delete)
+    operations(edit, delete, listall, create)
     attributes
     {
         naziv:

@@ -3,3 +3,6 @@ class UnimplementedPlatformException(Exception):
 
 class GeneratorException(Exception):
     pass
+
+class ApplangSemanticError(Exception):
+    pass

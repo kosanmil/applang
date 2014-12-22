@@ -67,8 +67,8 @@
 	
 	<!-- Button texts -->
 	<string name="btn_show">Prikaži</string>
-	<string name="btn_add_image">Dpdaj sliku</string>
+	<string name="btn_add_image">Dodaj sliku</string>
 	<string name="btn_change_image">Promeni sliku</string>
-	<string name="btn_clear_image">Skloni sliku</string>
-	
+	<string name="btn_clear_image">Ukloni</string>
+
 </resources>

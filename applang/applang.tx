@@ -3,7 +3,7 @@
 ApplangModel:
     (
         (config=Config)|
-        (entities*=Entity)
+        (entities+=Entity)
     )+
 ;
 
@@ -68,7 +68,6 @@ Attribute:
     '('
          ( (required?='required')
            |(unique?='unique')
-           |(transient?='transient')
            |(exclude_from_list?='excludeFromList')
            |(to_string?='toString')
            |(readonly?='readonly')

@@ -66,6 +66,8 @@ def check_semantics(model, metamodel):
 
     if not model.entities:
         raise TextXSemanticError('At least one entity is required')
+    if not [x for x in model.entities if x.operations.listall]:
+        raise TextXSemanticError("At least one entity with the 'listAll' operation is required")
     #Checking duplicate entity names
     entity_names = [x.name for x in model.entities]
     if len(entity_names) != len(set(entity_names)):
