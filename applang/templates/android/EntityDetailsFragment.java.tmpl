@@ -86,7 +86,7 @@ public class {{entity.name}}DetailsFragment extends AbstractDetailsFragment {
 	    TextView tv_{{attr.name|cameltounder}} = (TextView) getView().findViewById(R.id.tv_{{attr.name|cameltounder}});
 	    if(!cursor.isNull(cursor.getColumnIndex({{entity.name}}Table.COLUMN_{{attr.name|cameltounder|upper}})))
 			tv_{{attr.name|cameltounder}}.setText(DatePickerUtils.formatDateByLocale(getActivity(),
-					cursor.getLong(cursor.getColumnIndex(FirmaTable.COLUMN_{{attr.name|cameltounder|upper}}))));
+					cursor.getLong(cursor.getColumnIndex({{entity.name}}Table.COLUMN_{{attr.name|cameltounder|upper}}))));
 			{% elif attr.primitive_type == 'address_type' %}
 		TextView tv_{{attr.name|cameltounder}} = (TextView) getView().findViewById(R.id.tv_{{attr.name|cameltounder}});
 	    final String {{attr.name|cameltounder}} = cursor.getString(cursor

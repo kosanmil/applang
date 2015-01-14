@@ -1,9 +1,9 @@
 config {
-    app_name = MasterGenNoAltCode
-    app_label = "Master Gen No Altered Code"
-    namespace = master
+    app_name = ApplangGenApp
+    app_label = "Applang Generated App"
+    namespace = applang
     db_version = 3
-    start_screen = Drzava
+    start_screen = Country
     platforms = android, ios
     android_specs
     {
@@ -11,76 +11,69 @@ config {
     }
 }
 
-entity Drzava ("Država") {
+entity Country {
     operations(listall, create, edit, delete)
     attributes
     {
-        sifra ("Šifra"):
+        code:
             string(required, unique, searchable, readonly)
 
-        naziv:
+        name:
             string(required, unique, searchable, toString)
 
-        zastava:
+        flag:
             image
     }
 }
 
-entity NaseljenoMesto ("Naseljeno Mesto") {
+entity Town ("Town") {
     operations(edit, delete, listall, create)
     attributes
     {
-        naziv:
+        name:
             string(required, searchable, toString)
 
-        postCode ("Poštanski kod"):
+        postCode ("Post code"):
             numeric_string(required)
 
-        drzava ("Država"):
-            Drzava(required, searchable, viewFromContainer)
+        country:
+            Country(required, searchable, viewFromContainer)
 
-        drugaDrzava ("Druga država"):
-            Drzava (viewFromContainer)
-
-        brojStanovnika ("Broj stanovnika"):
+        population:
             int
     }
-    unique(naziv, drzava)
-    unique(postCode, drugaDrzava)
+    unique(name, country)
 }
 
-entity Firma {
+entity Company {
     operations(listall, create, edit, delete)
     attributes
     {
-        naziv:
+        name:
             string (required, searchable, toString ,readonly)
 
-        pib ("PIB broj"):
+        vatNumber ("VAT number"):
             numeric_string (required, unique)
 
-        domaca ("Domaća"):
-            bool (readonly)
+        domestic:
+            bool (readonly, excludeFromList)
 
-        naseljenoMesto:
-            NaseljenoMesto (required, searchable, viewFromContainer)
+        town:
+            Town (required, searchable, viewFromContainer)
 
-        opis:
+        descr ("Description"):
             textarea_string (excludeFromList, readonly)
 
-        nadFirma:
-            Firma (viewFromContainer)
+        parentCompany ("Parent company"):
+            Company (viewFromContainer)
 
-        telefon:
+        telephone:
             telephone_type (excludeFromList)
 
-        datumOsnivanja:
+        foundingDate("Founding date"):
             date (excludeFromList)
 
-        adresa:
+        address:
             address_type (excludeFromList)
-
-        vrednostFirme ("Vrednost firme"):
-            float
     }
 }
