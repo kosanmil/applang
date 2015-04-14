@@ -32,16 +32,16 @@ The following example generates an application from the ``example_textx.alang`` 
     gen_apps_from_textx_file("example_textx.alang", "gen")
 
 
-Grammar example
+Example model
 ---------------
 
-The following example shows the applang grammar written for an application that handles the following entities: 
+The following example shows the applang model written for an application that handles the following entities: 
 
 Country, Town and Company. 
 
 Countries can have multiple towns, Towns can have multiple companies, and Companies can have multiple subcompanies.
 
-The grammar also contains the ``config``, which states information about the application, such as the name, namespace and platforms on which to generate.
+The model also contains the ``config``, which states information about the application, such as the name, namespace and platforms on which to generate.
 
 ::
 
@@ -128,7 +128,7 @@ The grammar also contains the ``config``, which states information about the app
 Generated application example
 -----------------------------
 
-The following images show screenshots from the application that was generated using the above grammar example.
+The following images show screenshots from the application that was generated using the above example model.
 
 Window that shows the list of countries (unaltered to the left, and altered using hand-written code to the right)
 
