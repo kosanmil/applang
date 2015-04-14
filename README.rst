@@ -37,9 +37,9 @@ Grammar example
 
 The following example shows the applang grammar written for an application that handles the following entities: 
 
-Country, Town and Firm. 
+Country, Town and Company. 
 
-Countries can have multiple towns, Towns can have multiple firms, and Firms can have multiple subfirms.
+Countries can have multiple towns, Towns can have multiple companies, and Companies can have multiple subcompanies.
 
 The grammar also contains the ``config``, which states information about the application, such as the name, namespace and platforms on which to generate.
 
@@ -129,6 +129,19 @@ Generated application example
 -----------------------------
 
 The following images show screenshots from the application that was generated using the above grammar example.
+
+Window that shows the list of countries (unaltered to the left, and altered using hand-written code to the right)
+
+.. image:: https://raw.githubusercontent.com/kosanmil/applang/master/screenshots/country_list_altered.png
+
+Window for listing and searching towns
+
+.. image:: https://raw.githubusercontent.com/kosanmil/applang/master/screenshots/town_search.png
+
+Windows for list of companies (left) and details of a specific company (right)
+
+.. image:: https://raw.githubusercontent.com/kosanmil/applang/master/screenshots/company.png
+
 
 
 .. _textX: https://github.com/igordejanovic/textX
